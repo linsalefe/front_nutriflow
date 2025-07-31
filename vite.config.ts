@@ -12,4 +12,9 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    allowedHosts: ['app-nutriflow.onrender.com'],
+    host: '0.0.0.0',
+    port: 4173,
+  },
 });
