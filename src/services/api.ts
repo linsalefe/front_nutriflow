@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://52.207.198.133/api',
+  baseURL: 'https://back-nutriflow-ycr2.onrender.com/api',
 });
 
 // Antes de cada requisição, injeta o token
