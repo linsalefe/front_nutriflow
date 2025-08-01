@@ -168,38 +168,26 @@ export default function ChatPage() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: isMobile ? '100vh' : 'calc(100vh - 64px)',
+        height: '100vh',
+        width: '100%',
         bgcolor: theme.palette.background.default,
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
       {/* Sugestões - apenas para desktop */}
       <Box
         sx={{
-          px: { xs: 2, md: 4 },     // margem horizontal ajustada
-          py: 1,
+          px: 3,
+          py: 2,
           bgcolor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
           overflowX: 'auto',
           display: { xs: 'none', md: 'flex' },
-          gap: 1,
-        }}
-      >
-        {suggestions.map(s => (
-          <Chip key={s} label={s} clickable onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
-        ))}
-      </Box>
-
-      {/* Histórico de mensagens - otimizado estilo WhatsApp */}
-      <Box
-        sx={{
-          flex: 1,
-          px: { xs: 1, sm: 2, md: 4 }, // padding horizontal ajustado
-          py: { xs: 1, sm: 1 },
-          overflowY: 'auto',
-          paddingBottom: { xs: '10px', sm: '10px' },
+          gap: 1.5,
+          flexShrink: 0,
           '&::-webkit-scrollbar': {
-            width: '4px',
+            height: '4px',
           },
           '&::-webkit-scrollbar-track': {
             backgroundColor: 'transparent',
@@ -210,24 +198,67 @@ export default function ChatPage() {
           },
         }}
       >
+        {suggestions.map(s => (
+          <Chip 
+            key={s} 
+            label={s} 
+            clickable 
+            onClick={() => setMensagem(s)} 
+            sx={{ 
+              flexShrink: 0,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light,
+              }
+            }} 
+          />
+        ))}
+      </Box>
+
+      {/* Histórico de mensagens */}
+      <Box
+        sx={{
+          flex: 1,
+          px: { xs: 2, sm: 3, md: 4 },
+          py: 2,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'rgba(0,0,0,0.05)',
+            borderRadius: '3px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: theme.palette.primary.light,
+            borderRadius: '3px',
+            '&:hover': {
+              backgroundColor: theme.palette.primary.main,
+            }
+          },
+        }}
+      >
         {historico.map((msg, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{
               display: 'flex',
               justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              marginBottom: isMobile ? 6 : 8,
+              width: '100%',
             }}
           >
             <Paper
               elevation={1}
               sx={{
-                maxWidth: { xs: '90%', sm: '80%' },
-                px: { xs: 1.2, sm: 1.5 },
-                py: { xs: 1, sm: 1 },
+                maxWidth: { xs: '85%', sm: '75%', md: '65%' },
+                px: 2,
+                py: 1.5,
                 bgcolor: msg.role === 'user'
                   ? theme.palette.primary.main
                   : theme.palette.background.paper,
@@ -238,7 +269,7 @@ export default function ChatPage() {
                   ? '18px 18px 4px 18px'
                   : '18px 18px 18px 4px',
                 position: 'relative',
-                boxShadow: { xs: '0 1px 2px rgba(0,0,0,0.1)', sm: 1 },
+                border: msg.role === 'bot' ? `1px solid ${theme.palette.divider}` : 'none',
               }}
             >
               {msg.type === 'image' && msg.imageUrl && (
@@ -248,8 +279,10 @@ export default function ChatPage() {
                     alt=""
                     style={{
                       width: '100%',
-                      maxWidth: isMobile ? '200px' : '100%',
-                      borderRadius: 8
+                      maxWidth: '300px',
+                      height: 'auto',
+                      borderRadius: 8,
+                      display: 'block',
                     }}
                   />
                 </Box>
@@ -258,9 +291,8 @@ export default function ChatPage() {
                 variant="body2"
                 sx={{
                   whiteSpace: 'pre-wrap',
-                  fontSize: { xs: '0.875rem', sm: '0.875rem' },
-                  lineHeight: { xs: 1.4, sm: 1.5 },
                   wordBreak: 'break-word',
+                  lineHeight: 1.6,
                 }}
               >
                 {msg.text}
@@ -271,13 +303,15 @@ export default function ChatPage() {
                   onClick={() => copyText(msg.text)}
                   sx={{
                     position: 'absolute',
-                    top: { xs: 2, sm: 4 },
-                    right: { xs: 2, sm: 4 },
-                    width: { xs: '24px', sm: '32px' },
-                    height: { xs: '24px', sm: '32px' },
+                    top: 4,
+                    right: 4,
+                    opacity: 0.7,
+                    '&:hover': {
+                      opacity: 1,
+                    }
                   }}
                 >
-                  <ContentCopyIcon sx={{ fontSize: { xs: '14px', sm: '16px' } }} />
+                  <ContentCopyIcon fontSize="small" />
                 </IconButton>
               )}
             </Paper>
@@ -286,22 +320,16 @@ export default function ChatPage() {
         <div ref={chatEndRef} />
       </Box>
 
-      {/* Input fixo no rodapé - estilo WhatsApp */}
+      {/* Input no rodapé */}
       <Box
         component="form"
         onSubmit={enviarMensagem}
         sx={{
-          position: { xs: 'fixed', sm: 'relative' },
-          bottom: { xs: 0, sm: 'auto' },
-          left: { xs: 0, sm: 'auto' },
-          right: { xs: 0, sm: 'auto' },
-          px: { xs: 1, sm: 2 },
-          py: { xs: 1, sm: 1 },
+          px: { xs: 2, sm: 3, md: 4 },
+          py: 2,
           bgcolor: theme.palette.background.paper,
           borderTop: `1px solid ${theme.palette.divider}`,
-          zIndex: { xs: 1000, sm: 'auto' },
-          boxShadow: { xs: '0 -2px 8px rgba(0,0,0,0.1)', sm: 'none' },
-          paddingBottom: { xs: 'calc(8px + env(safe-area-inset-bottom))', sm: '8px' },
+          flexShrink: 0,
         }}
       >
         <TextField
@@ -310,20 +338,16 @@ export default function ChatPage() {
           value={mensagem}
           onChange={e => setMensagem(e.target.value)}
           multiline
-          maxRows={isMobile ? 4 : 4}
+          maxRows={4}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
                 <IconButton
                   component="label"
                   disabled={imgLoading}
-                  sx={{
-                    width: { xs: '40px', sm: '40px' },
-                    height: { xs: '40px', sm: '40px' },
-                    mr: { xs: 0.5, sm: 0 },
-                  }}
+                  sx={{ mr: 1 }}
                 >
-                  <PhotoCameraIcon sx={{ fontSize: { xs: '22px', sm: '24px' } }} />
+                  <PhotoCameraIcon />
                   <input
                     hidden
                     type="file"
@@ -339,58 +363,40 @@ export default function ChatPage() {
                 <IconButton
                   type="submit"
                   disabled={!mensagem.trim() || imgLoading}
-                  sx={{
-                    width: { xs: '40px', sm: '40px' },
-                    height: { xs: '40px', sm: '40px' },
-                    ml: { xs: 0.5, sm: 0 },
-                  }}
+                  color="primary"
                 >
                   {imgLoading ? (
-                    <CircularProgress size={isMobile ? 18 : 18} />
+                    <CircularProgress size={20} />
                   ) : (
-                    <SendIcon sx={{ fontSize: { xs: '22px', sm: '24px' } }} />
+                    <SendIcon />
                   )}
                 </IconButton>
               </InputAdornment>
             ),
-            sx: {
-              fontSize: { xs: '16px', sm: '16px' },
-              minHeight: { xs: '48px', sm: '56px' },
-            },
           }}
           sx={{
-            bgcolor: theme.palette.background.default,
-            borderRadius: { xs: 6, sm: 2 },
             '& .MuiOutlinedInput-root': {
-              paddingRight: { xs: '4px', sm: '12px' },
-              paddingLeft: { xs: '4px', sm: '12px' },
-            },
-            '& .MuiInputBase-input': {
-              fontSize: { xs: '16px', sm: '16px' },
-              padding: { xs: '12px 8px', sm: '16.5px 14px' },
+              borderRadius: 3,
+              backgroundColor: theme.palette.background.default,
             },
           }}
         />
       </Box>
 
-      {/* Snackbar - ajustado para mobile */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={2000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'center',
         }}
-        sx={{
-          bottom: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: '24px' },
-        }}
       >
         <Alert
           severity={snackbar.severity}
-          sx={{
-            fontSize: { xs: '0.875rem', sm: '1rem' },
-          }}
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
