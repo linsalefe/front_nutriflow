@@ -176,7 +176,7 @@ export default function ChatPage() {
       {/* Sugestões - apenas para desktop */}
       <Box
         sx={{
-          px: 2,
+          px: { xs: 2, md: 4 },     // margem horizontal ajustada
           py: 1,
           bgcolor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
@@ -194,7 +194,7 @@ export default function ChatPage() {
       <Box
         sx={{
           flex: 1,
-          px: { xs: 1, sm: 2, md: 4 }, // padding horizontal ajustado para desktop
+          px: { xs: 1, sm: 2, md: 4 }, // padding horizontal ajustado
           py: { xs: 1, sm: 1 },
           overflowY: 'auto',
           paddingBottom: { xs: '10px', sm: '10px' },
@@ -246,17 +246,17 @@ export default function ChatPage() {
                   <img
                     src={msg.imageUrl}
                     alt=""
-                    style={{ 
-                      width: '100%', 
+                    style={{
+                      width: '100%',
                       maxWidth: isMobile ? '200px' : '100%',
-                      borderRadius: 8 
+                      borderRadius: 8
                     }}
                   />
                 </Box>
               )}
-              <Typography 
-                variant="body2" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                sx={{
                   whiteSpace: 'pre-wrap',
                   fontSize: { xs: '0.875rem', sm: '0.875rem' },
                   lineHeight: { xs: 1.4, sm: 1.5 },
@@ -269,19 +269,15 @@ export default function ChatPage() {
                 <IconButton
                   size="small"
                   onClick={() => copyText(msg.text)}
-                  sx={{ 
-                    position: 'absolute', 
-                    top: { xs: 2, sm: 4 }, 
+                  sx={{
+                    position: 'absolute',
+                    top: { xs: 2, sm: 4 },
                     right: { xs: 2, sm: 4 },
                     width: { xs: '24px', sm: '32px' },
                     height: { xs: '24px', sm: '32px' },
                   }}
                 >
-                  <ContentCopyIcon 
-                    sx={{ 
-                      fontSize: { xs: '14px', sm: '16px' }
-                    }} 
-                  />
+                  <ContentCopyIcon sx={{ fontSize: { xs: '14px', sm: '16px' } }} />
                 </IconButton>
               )}
             </Paper>
@@ -318,8 +314,8 @@ export default function ChatPage() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <IconButton 
-                  component="label" 
+                <IconButton
+                  component="label"
                   disabled={imgLoading}
                   sx={{
                     width: { xs: '40px', sm: '40px' },
@@ -327,9 +323,7 @@ export default function ChatPage() {
                     mr: { xs: 0.5, sm: 0 },
                   }}
                 >
-                  <PhotoCameraIcon 
-                    sx={{ fontSize: { xs: '22px', sm: '24px' } }} 
-                  />
+                  <PhotoCameraIcon sx={{ fontSize: { xs: '22px', sm: '24px' } }} />
                   <input
                     hidden
                     type="file"
@@ -342,8 +336,8 @@ export default function ChatPage() {
             ),
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton 
-                  type="submit" 
+                <IconButton
+                  type="submit"
                   disabled={!mensagem.trim() || imgLoading}
                   sx={{
                     width: { xs: '40px', sm: '40px' },
@@ -362,7 +356,7 @@ export default function ChatPage() {
             sx: {
               fontSize: { xs: '16px', sm: '16px' },
               minHeight: { xs: '48px', sm: '56px' },
-            }
+            },
           }}
           sx={{
             bgcolor: theme.palette.background.default,
@@ -374,7 +368,7 @@ export default function ChatPage() {
             '& .MuiInputBase-input': {
               fontSize: { xs: '16px', sm: '16px' },
               padding: { xs: '12px 8px', sm: '16.5px 14px' },
-            }
+            },
           }}
         />
       </Box>
@@ -384,15 +378,15 @@ export default function ChatPage() {
         open={snackbar.open}
         autoHideDuration={2000}
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        anchorOrigin={{ 
-          vertical: 'bottom', 
-          horizontal: 'center' 
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
         }}
         sx={{
           bottom: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: '24px' },
         }}
       >
-        <Alert 
+        <Alert
           severity={snackbar.severity}
           sx={{
             fontSize: { xs: '0.875rem', sm: '1rem' },
