@@ -11,6 +11,7 @@ import {
   Alert,
   CircularProgress,
   Paper,
+  InputAdornment,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -56,12 +57,14 @@ export default function ChatPage() {
         const { data } = await api.get<Mensagem[]>('/chat/history');
         setHistorico(data);
       } catch {
-        setHistorico([{
-          role: 'bot',
-          text: 'Olá! Eu sou sua IA Nutricionista 😊\nPergunte algo ou escolha uma sugestão abaixo.',
-          type: 'text',
-          created_at: new Date().toISOString(),
-        }]);
+        setHistorico([
+          {
+            role: 'bot',
+            text: 'Olá! Eu sou sua IA Nutricionista 😊\nPergunte algo ou escolha uma sugestão abaixo.',
+            type: 'text',
+            created_at: new Date().toISOString(),
+          },
+        ]);
       }
     })();
   }, []);
@@ -71,24 +74,43 @@ export default function ChatPage() {
   }, [historico]);
 
   const saveMessage = async (msg: Mensagem) => {
-    try { await api.post('/chat/save', msg); } catch {}
+    try {
+      await api.post('/chat/save', msg);
+    } catch {}
   };
 
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = mensagem.trim();
     if (!text) return;
-    const userMsg: Mensagem = { role: 'user', text, type: 'text', created_at: new Date().toISOString() };
+
+    const userMsg: Mensagem = {
+      role: 'user',
+      text,
+      type: 'text',
+      created_at: new Date().toISOString(),
+    };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
     setLoading(true);
+
     try {
       const { data } = await api.post<{ response: string }>('/chat/send', { message: text });
-      const botMsg: Mensagem = { role: 'bot', text: data.response, type: 'text', created_at: new Date().toISOString() };
+      const botMsg: Mensagem = {
+        role: 'bot',
+        text: data.response,
+        type: 'text',
+        created_at: new Date().toISOString(),
+      };
       setHistorico(h => [...h, botMsg]);
       saveMessage(botMsg);
     } catch {
-      const errMsg: Mensagem = { role: 'bot', text: 'Erro na conexão.', type: 'text', created_at: new Date().toISOString() };
+      const errMsg: Mensagem = {
+        role: 'bot',
+        text: 'Desculpe, houve um erro ao conectar.',
+        type: 'text',
+        created_at: new Date().toISOString(),
+      };
       setHistorico(h => [...h, errMsg]);
       saveMessage(errMsg);
     } finally {
@@ -100,15 +122,31 @@ export default function ChatPage() {
   const handleFile = async (file: File) => {
     setImgLoading(true);
     const preview = URL.createObjectURL(file);
-    const userMsg: Mensagem = { role: 'user', text: file.name, type: 'image', imageUrl: preview, created_at: new Date().toISOString() };
+    const userMsg: Mensagem = {
+      role: 'user',
+      text: file.name,
+      type: 'image',
+      imageUrl: preview,
+      created_at: new Date().toISOString(),
+    };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
+
     try {
       const form = new FormData();
       form.append('file', file);
-      const { data } = await api.post('/image/analyze', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const { data } = await api.post('/image/analyze', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       const analysis = typeof data.analise === 'string' ? data.analise : JSON.stringify(data.analise);
-      const botMsg: Mensagem = { role: 'bot', text: analysis, type: 'image', imageUrl: preview, created_at: new Date().toISOString() };
+
+      const botMsg: Mensagem = {
+        role: 'bot',
+        text: analysis,
+        type: 'image',
+        imageUrl: preview,
+        created_at: new Date().toISOString(),
+      };
       setHistorico(h => [...h, botMsg]);
       saveMessage(botMsg);
       setSnackbar({ open: true, message: 'Imagem analisada!', severity: 'success' });
@@ -132,18 +170,34 @@ export default function ChatPage() {
         flexDirection: 'column',
         height: isMobile ? '100vh' : 'calc(100vh - 64px)',
         bgcolor: theme.palette.background.default,
-        px: 1,
       }}
     >
-      {isMobile && (
-        <Box sx={{ py: 1, bgcolor: theme.palette.background.paper, borderBottom: `1px solid ${theme.palette.divider}`, overflowX: 'auto', display: 'flex', gap: 1 }}>
-          {suggestions.map(s => (
-            <Chip key={s} label={s} onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
-          ))}
-        </Box>
-      )}
+      {/* Sugestões fixas no topo */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1,
+          bgcolor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          overflowX: 'auto',
+          display: { xs: 'flex', md: 'none' },
+          gap: 1,
+        }}
+      >
+        {suggestions.map(s => (
+          <Chip key={s} label={s} clickable onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
+        ))}
+      </Box>
 
-      <Box sx={{ flex: 1, py: 1, overflowY: 'auto' }}>
+      {/* Histórico de mensagens */}
+      <Box
+        sx={{
+          flex: 1,
+          px: 2,
+          py: 1,
+          overflowY: 'auto',
+        }}
+      >
         {historico.map((msg, i) => (
           <motion.div
             key={i}
@@ -160,24 +214,38 @@ export default function ChatPage() {
               elevation={1}
               sx={{
                 maxWidth: '80%',
-                px: 1,
-                py: 0.8,
-                bgcolor: msg.role === 'user' ? theme.palette.primary.main : theme.palette.background.paper,
-                color: msg.role === 'user' ? theme.palette.primary.contrastText : theme.palette.text.primary,
-                borderRadius: msg.role === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                px: 1.5,
+                py: 1,
+                bgcolor: msg.role === 'user'
+                  ? theme.palette.primary.main
+                  : theme.palette.background.paper,
+                color: msg.role === 'user'
+                  ? theme.palette.primary.contrastText
+                  : theme.palette.text.primary,
+                borderRadius: msg.role === 'user'
+                  ? '12px 12px 0 12px'
+                  : '12px 12px 12px 0',
                 position: 'relative',
               }}
             >
               {msg.type === 'image' && msg.imageUrl && (
-                <Box sx={{ mb: 0.8 }}>
-                  <img src={msg.imageUrl} alt="" style={{ width: '100%', borderRadius: 6 }} />
+                <Box sx={{ mb: 1 }}>
+                  <img
+                    src={msg.imageUrl}
+                    alt=""
+                    style={{ width: '100%', borderRadius: 8 }}
+                  />
                 </Box>
               )}
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                 {msg.text}
               </Typography>
               {msg.role === 'bot' && (
-                <IconButton size="small" onClick={() => copyText(msg.text)} sx={{ position: 'absolute', top: 4, right: 4 }}>
+                <IconButton
+                  size="small"
+                  onClick={() => copyText(msg.text)}
+                  sx={{ position: 'absolute', top: 4, right: 4 }}
+                >
                   <ContentCopyIcon fontSize="small" />
                 </IconButton>
               )}
@@ -187,27 +255,61 @@ export default function ChatPage() {
         <div ref={chatEndRef} />
       </Box>
 
-      <Box component="form" onSubmit={enviarMensagem} sx={{ display: 'flex', alignItems: 'center', py: 1, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, gap: 0.5 }}>
-        <IconButton component="label" size="small" disabled={imgLoading}>
-          <PhotoCameraIcon fontSize="small" />
-          <input hidden type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} />
-        </IconButton>
+      {/* Input fixo no rodapé */}
+      <Box
+        component="form"
+        onSubmit={enviarMensagem}
+        sx={{
+          px: 2,
+          py: 1,
+          bgcolor: theme.palette.background.paper,
+          borderTop: `1px solid ${theme.palette.divider}`,
+        }}
+      >
         <TextField
+          fullWidth
+          placeholder="Digite sua pergunta..."
           value={mensagem}
           onChange={e => setMensagem(e.target.value)}
-          placeholder="Digite sua pergunta..."
           multiline
           maxRows={4}
-          size="small"
-          fullWidth
-          sx={{ '& .MuiInputBase-root': { padding: '4px 8px', fontSize: '0.875rem' } }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton component="label" disabled={imgLoading}>
+                  <PhotoCameraIcon />
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={e => e.target.files && handleFile(e.target.files[0])}
+                  />
+                </IconButton>
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton type="submit" disabled={!mensagem.trim() || imgLoading}>
+                  {imgLoading ? <CircularProgress size={18} /> : <SendIcon />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            bgcolor: theme.palette.background.default,
+            borderRadius: 2,
+          }}
         />
-        <IconButton type="submit" size="small" disabled={!mensagem.trim() || imgLoading}>
-          {imgLoading ? <CircularProgress size={16} /> : <SendIcon fontSize="small" />}
-        </IconButton>
       </Box>
 
-      <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={2000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </Box>
