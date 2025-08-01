@@ -1,3 +1,4 @@
+// src/pages/DashboardPage.tsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -49,7 +50,9 @@ export default function DashboardPage() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const drawerWidth = 240;
 
+  // Extrai nome do JWT
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -60,6 +63,7 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Busca métricas
   const fetchMetrics = async (p: string) => {
     setLoadingAction(true);
     try {
@@ -76,6 +80,7 @@ export default function DashboardPage() {
     fetchMetrics(period);
   }, [period]);
 
+  // Handlers do modal
   const handleOpenDialog = () => {
     setNewWeight('');
     setNewHeight('');
@@ -100,10 +105,12 @@ export default function DashboardPage() {
     }
   };
 
+  // Loading inicial
   if (!metrics) {
     return (
       <Box
         sx={{
+          ml: isMobile ? 0 : `${drawerWidth}px`,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -116,6 +123,8 @@ export default function DashboardPage() {
   }
 
   const history = metrics.history || [];
+
+  // IMC e classificação
   const bmiValue = metrics.bmi ?? 0;
   const classification =
     bmiValue < 18.5
@@ -126,9 +135,16 @@ export default function DashboardPage() {
       ? 'Sobrepeso'
       : 'Obesidade';
 
+  // Empty state
   if (history.length === 0 && !loadingAction) {
     return (
-      <Box sx={{ px: isMobile ? 2 : 6, py: isMobile ? 3 : 6 }}>
+      <Box
+        sx={{
+          ml: isMobile ? 0 : `${drawerWidth}px`,
+          px: isMobile ? 2 : 6,
+          py: isMobile ? 3 : 6,
+        }}
+      >
         <Typography variant="h5" fontWeight={600} gutterBottom>
           Olá, {userName} 👋
         </Typography>
@@ -144,6 +160,7 @@ export default function DashboardPage() {
           </Button>
         </Box>
 
+        {/* Modal */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
           <DialogTitle>Registrar Peso e Altura</DialogTitle>
           <DialogContent>
@@ -179,23 +196,20 @@ export default function DashboardPage() {
     );
   }
 
+  // Layout principal
   return (
-    <Box sx={{ px: isMobile ? 2 : 6, py: isMobile ? 3 : 6 }}>
-      <Box
-        display="flex"
-        flexDirection={isMobile ? 'column' : 'row'}
-        justifyContent="space-between"
-        alignItems={isMobile ? 'flex-start' : 'center'}
-        mb={3}
-      >
+    <Box
+      sx={{
+        ml: isMobile ? 0 : `${drawerWidth}px`,
+        px: isMobile ? 2 : 6,
+        py: isMobile ? 3 : 6,
+      }}
+    >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={600}>
           Olá, {userName} 👋
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleOpenDialog}
-          sx={{ mt: isMobile ? 2 : 0 }}
-        >
+        <Button variant="contained" onClick={handleOpenDialog}>
           Registrar Peso/Altura
         </Button>
       </Box>
@@ -205,7 +219,7 @@ export default function DashboardPage() {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={6} sm={3}>
+        <Grid item>
           <StatsCard
             icon={<FitnessCenterIcon />}
             label="Objetivo"
@@ -213,26 +227,14 @@ export default function DashboardPage() {
             highlight
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatsCard
-            icon={<HeightIcon />}
-            label="Altura"
-            value={`${metrics.height_cm ?? '-'} cm`}
-          />
+        <Grid item>
+          <StatsCard icon={<HeightIcon />} label="Altura" value={`${metrics.height_cm ?? '-'} cm`} />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatsCard
-            icon={<FlagIcon />}
-            label="Peso Inicial"
-            value={`${metrics.initial_weight ?? '-'} kg`}
-          />
+        <Grid item>
+          <StatsCard icon={<FlagIcon />} label="Peso Inicial" value={`${metrics.initial_weight ?? '-'} kg`} />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatsCard
-            icon={<ScaleIcon />}
-            label="Peso Atual"
-            value={`${metrics.current_weight ?? '-'} kg`}
-          />
+        <Grid item>
+          <StatsCard icon={<ScaleIcon />} label="Peso Atual" value={`${metrics.current_weight ?? '-'} kg`} />
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -250,38 +252,6 @@ export default function DashboardPage() {
           </Typography>
         </Grid>
       </Grid>
-
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Registrar Peso e Altura</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Peso (kg)"
-            fullWidth
-            value={newWeight}
-            onChange={(e) => setNewWeight(e.target.value)}
-            helperText="Use ponto ou vírgula"
-          />
-          <TextField
-            margin="dense"
-            label="Altura (cm)"
-            fullWidth
-            value={newHeight}
-            onChange={(e) => setNewHeight(e.target.value)}
-            helperText="Ex.: 170"
-            sx={{ mt: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={loadingAction}>
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirm} disabled={loadingAction} variant="contained">
-            {loadingAction ? <CircularProgress size={20} /> : 'Ok'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }
