@@ -50,7 +50,6 @@ export default function ChatPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Carrega histórico
   useEffect(() => {
     (async () => {
       try {
@@ -67,7 +66,6 @@ export default function ChatPage() {
     })();
   }, []);
 
-  // Scroll ao final
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [historico]);
@@ -76,24 +74,20 @@ export default function ChatPage() {
     try { await api.post('/chat/save', msg); } catch {}
   };
 
-  // Envia texto
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = mensagem.trim();
-    if (!text) return;
-
-    const userMsg: Mensagem = { role: 'user', text, type: 'text', created_at: new Date().toISOString() };
+    if (!mensagem.trim()) return;
+    const userMsg: Mensagem = { role: 'user', text: mensagem.trim(), type: 'text', created_at: new Date().toISOString() };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
     setLoading(true);
-
     try {
-      const { data } = await api.post<{ response: string }>('/chat/send', { message: text });
+      const { data } = await api.post<{ response: string }>('/chat/send', { message: mensagem });
       const botMsg: Mensagem = { role: 'bot', text: data.response, type: 'text', created_at: new Date().toISOString() };
       setHistorico(h => [...h, botMsg]);
       saveMessage(botMsg);
     } catch {
-      const errMsg: Mensagem = { role: 'bot', text: 'Desculpe, houve um erro ao conectar.', type: 'text', created_at: new Date().toISOString() };
+      const errMsg: Mensagem = { role: 'bot', text: 'Erro na conexão.', type: 'text', created_at: new Date().toISOString() };
       setHistorico(h => [...h, errMsg]);
       saveMessage(errMsg);
     } finally {
@@ -102,14 +96,12 @@ export default function ChatPage() {
     }
   };
 
-  // Envia imagem
   const handleFile = async (file: File) => {
     setImgLoading(true);
     const preview = URL.createObjectURL(file);
     const userMsg: Mensagem = { role: 'user', text: file.name, type: 'image', imageUrl: preview, created_at: new Date().toISOString() };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
-
     try {
       const form = new FormData();
       form.append('file', file);
@@ -139,36 +131,18 @@ export default function ChatPage() {
         flexDirection: 'column',
         height: isMobile ? '100vh' : 'calc(100vh - 64px)',
         bgcolor: theme.palette.background.default,
+        px: 1,  // reduzir padding horizontal
       }}
     >
-      {/* Sugestões (mobile) */}
       {isMobile && (
-        <Box
-          sx={{
-            px: 2,
-            py: 1,
-            bgcolor: theme.palette.background.paper,
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            overflowX: 'auto',
-            display: 'flex',
-            gap: 1,
-          }}
-        >
+        <Box sx={{ py: 1, bgcolor: theme.palette.background.paper, borderBottom: `1px solid ${theme.palette.divider}`, overflowX: 'auto', display: 'flex', gap: 1 }}>
           {suggestions.map(s => (
-            <Chip key={s} label={s} clickable onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
+            <Chip key={s} label={s} onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
           ))}
         </Box>
       )}
 
-      {/* Histórico de mensagens */}
-      <Box
-        sx={{
-          flex: 1,
-          px: 2,
-          py: 1,
-          overflowY: 'auto',
-        }}
-      >
+      <Box sx={{ flex: 1, py: 1, overflowY: 'auto' }}>
         {historico.map((msg, i) => (
           <motion.div
             key={i}
@@ -178,15 +152,15 @@ export default function ChatPage() {
             style={{
               display: 'flex',
               justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              marginBottom: 8,
+              mb: 1,
             }}
           >
             <Paper
               elevation={1}
               sx={{
                 maxWidth: '80%',
-                px: 1.5,
-                py: 1,
+                px: 1,
+                py: 0.8,
                 bgcolor: msg.role === 'user' ? theme.palette.primary.main : theme.palette.background.paper,
                 color: msg.role === 'user' ? theme.palette.primary.contrastText : theme.palette.text.primary,
                 borderRadius: msg.role === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
@@ -194,19 +168,15 @@ export default function ChatPage() {
               }}
             >
               {msg.type === 'image' && msg.imageUrl && (
-                <Box sx={{ mb: 1 }}>
-                  <img src={msg.imageUrl} alt="" style={{ width: '100%', borderRadius: 8 }} />
+                <Box sx={{ mb: 0.8 }}>
+                  <img src={msg.imageUrl} alt="" style={{ width: '100%', borderRadius: 6 }} />
                 </Box>
               )}
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                 {msg.text}
               </Typography>
               {msg.role === 'bot' && (
-                <IconButton
-                  size="small"
-                  onClick={() => copyText(msg.text)}
-                  sx={{ position: 'absolute', top: 4, right: 4 }}
-                >
+                <IconButton size="small" onClick={() => copyText(msg.text)} sx={{ position: 'absolute', top: 4, right: 4 }}>
                   <ContentCopyIcon fontSize="small" />
                 </IconButton>
               )}
@@ -216,33 +186,10 @@ export default function ChatPage() {
         <div ref={chatEndRef} />
       </Box>
 
-      {/* Input fixo no rodapé */}
-      <Box
-        component="form"
-        onSubmit={enviarMensagem}
-        sx={{
-          position: 'sticky',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          alignItems: 'center',
-          px: 2,
-          py: 1,
-          gap: 1,
-          bgcolor: theme.palette.background.paper,
-          borderTop: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <IconButton component="label" disabled={imgLoading}>
-          <PhotoCameraIcon />
-          <input
-            hidden
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={e => e.target.files && handleFile(e.target.files[0])}
-          />
+      <Box component="form" onSubmit={enviarMensagem} sx={{ display: 'flex', alignItems: 'center', py: 1, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, gap: 0.5 }}>
+        <IconButton component="label" size="small" disabled={imgLoading}>
+          <PhotoCameraIcon fontSize="small" />
+          <input hidden type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} />
         </IconButton>
         <TextField
           value={mensagem}
@@ -251,21 +198,15 @@ export default function ChatPage() {
           multiline
           maxRows={4}
           size="small"
-          variant="outlined"
-          sx={{ flex: 1 }}
+          fullWidth
+          sx={{ '& .MuiInputBase-root': { padding: '4px 8px', fontSize: '0.875rem' } }}
         />
-        <IconButton type="submit" disabled={!mensagem.trim() || imgLoading}>
-          {imgLoading ? <CircularProgress size={18} /> : <SendIcon />}
+        <IconButton type="submit" size="small" disabled={!mensagem.trim() || imgLoading}>
+          {imgLoading ? <CircularProgress size={16} /> : <SendIcon fontSize="small" />}
         </IconButton>
       </Box>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={2000}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
+      <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </Box>
