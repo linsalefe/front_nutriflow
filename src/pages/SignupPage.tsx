@@ -32,6 +32,7 @@ export default function SignupPage() {
       setSnackbar({ open: true, message: 'Cadastro realizado com sucesso!', severity: 'success' });
       setTimeout(() => navigate('/login'), 1500);
     } catch (err: any) {
+      console.error(err.response?.data); // imprime detalhes do 422 para ajuste
       setSnackbar({ open: true, message: 'Erro ao cadastrar usuário.', severity: 'error' });
     }
   };
