@@ -76,13 +76,14 @@ export default function ChatPage() {
 
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mensagem.trim()) return;
-    const userMsg: Mensagem = { role: 'user', text: mensagem.trim(), type: 'text', created_at: new Date().toISOString() };
+    const text = mensagem.trim();
+    if (!text) return;
+    const userMsg: Mensagem = { role: 'user', text, type: 'text', created_at: new Date().toISOString() };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
     setLoading(true);
     try {
-      const { data } = await api.post<{ response: string }>('/chat/send', { message: mensagem });
+      const { data } = await api.post<{ response: string }>('/chat/send', { message: text });
       const botMsg: Mensagem = { role: 'bot', text: data.response, type: 'text', created_at: new Date().toISOString() };
       setHistorico(h => [...h, botMsg]);
       saveMessage(botMsg);
@@ -131,7 +132,7 @@ export default function ChatPage() {
         flexDirection: 'column',
         height: isMobile ? '100vh' : 'calc(100vh - 64px)',
         bgcolor: theme.palette.background.default,
-        px: 1,  // reduzir padding horizontal
+        px: 1,
       }}
     >
       {isMobile && (
@@ -152,7 +153,7 @@ export default function ChatPage() {
             style={{
               display: 'flex',
               justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              mb: 1,
+              marginBottom: 8,
             }}
           >
             <Paper
