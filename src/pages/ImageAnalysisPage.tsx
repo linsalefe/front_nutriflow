@@ -1,5 +1,6 @@
+// src/pages/ImageAnalysisPage.tsx
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import {
   Box,
   Typography,
@@ -68,16 +69,14 @@ export default function ImageAnalysisPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data } = await axios.post(
-        'http://localhost:8000/api/image/analyze',
+      const { data } = await api.post( // trocado axios.post(...) por api.post(...)
+        '/image/analyze',
         formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         }
@@ -144,7 +143,7 @@ export default function ImageAnalysisPage() {
                   disabled={!file}
                   sx={{ alignSelf: 'flex-start', minWidth: 160, py: 1.5, borderRadius: 2 }}
                 >
-                  Analisar{ ' ' }
+                  Analisar{' '}
                   {file && <CircularProgress size={18} sx={{ color: 'white', ml: 1 }} />}
                 </Button>
 

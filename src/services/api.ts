@@ -1,11 +1,10 @@
-// src/services/api.ts
 import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'https://back-nutriflow-ycr2.onrender.com/api',
 });
 
-// Antes de cada requisição, injeta o token
+// Injeta o token antes de cada requisição
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token && config.headers) {

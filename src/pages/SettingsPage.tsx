@@ -1,5 +1,6 @@
+// src/pages/SettingsPage.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import {
   Box,
   Grid,
@@ -33,10 +34,7 @@ export default function SettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:8000/api/user/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get('/user/me'); // trocado axios.get(...) por api.get(...)
         setForm({
           nome: res.data.nome,
           objetivo: res.data.objetivo,
@@ -53,10 +51,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put('http://localhost:8000/api/user/me', form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put('/user/me', form); // trocado axios.put(...) por api.put(...)
       setSnackbar({ open: true, message: 'Dados atualizados!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Erro ao atualizar dados.', severity: 'error' });
@@ -70,12 +65,7 @@ export default function SettingsPage() {
     if (!senha) return;
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        'http://localhost:8000/api/user/password',
-        { password: senha },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put('/user/password', { password: senha }); // trocado axios.put(...) por api.put(...)
       setSnackbar({ open: true, message: 'Senha alterada!', severity: 'success' });
       setSenha('');
     } catch {

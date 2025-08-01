@@ -1,6 +1,7 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import axios from 'axios';
+// import axios from 'axios'; // Removido
 import App from './App';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme/theme';
@@ -16,8 +17,7 @@ import '@fontsource/poppins/700.css';
 // Reset básico
 import './index.css';
 
-// Aponta todas as chamadas axios para o backend
-axios.defaults.baseURL = 'http://localhost:8000';
+// Removido axios.defaults.baseURL
 
 function ThemedApp() {
   const { mode } = useThemeMode();

@@ -1,5 +1,6 @@
+// src/pages/ListPage.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import { Box, Typography, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../contexts/LoadingContext';
@@ -14,10 +15,7 @@ export default function ListPage() {
     const fetchRefeicoes = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:8000/api/meal/history', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get('/meal/history'); // trocado axios.get(...) por api.get(...)
         setRefeicoes(res.data);
       } catch (err: any) {
         setError('Erro ao carregar refeições.');

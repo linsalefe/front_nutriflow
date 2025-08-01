@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import {
   Card,
   CardContent,
@@ -25,7 +25,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8000/api/user/login', {
+      const res = await api.post('/user/login', { // trocado axios.post(...) por api.post(...)
         username,
         password,
       });
@@ -88,7 +88,6 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          {/* Link para página de cadastro */}
           <Box textAlign="center" mt={2}>
             <Typography variant="body2">
               Ainda não tem conta?{' '}

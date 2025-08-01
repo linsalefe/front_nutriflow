@@ -1,6 +1,7 @@
+// src/pages/MealDetailPage.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import { Box, Card, CardContent, Typography, Button, CircularProgress, Alert } from '@mui/material';
 
 export default function MealDetailPage() {
@@ -13,10 +14,7 @@ export default function MealDetailPage() {
   useEffect(() => {
     const fetchRefeicao = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:8000/api/meal/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get(`/meal/${id}`); // trocado axios.get(...) por api.get(...)
         setRefeicao(res.data);
       } catch {
         setError('Erro ao carregar refeição.');
@@ -35,13 +33,21 @@ export default function MealDetailPage() {
     <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
       <Card sx={{ p: 3, borderRadius: 2 }}>
         <CardContent>
-          <Typography variant="h5" fontWeight={700} gutterBottom>Detalhe da Refeição</Typography>
-          <Typography><strong>Data:</strong> {new Date(refeicao.data).toLocaleString('pt-BR')}</Typography>
-          <Typography sx={{ mt: 2 }}><strong>Análise:</strong></Typography>
+          <Typography variant="h5" fontWeight={700} gutterBottom>
+            Detalhe da Refeição
+          </Typography>
+          <Typography>
+            <strong>Data:</strong> {new Date(refeicao.data).toLocaleString('pt-BR')}
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            <strong>Análise:</strong>
+          </Typography>
           <Typography>{refeicao.analise}</Typography>
           {refeicao.imagem_nome && (
             <>
-              <Typography sx={{ mt: 2 }}><strong>Imagem:</strong></Typography>
+              <Typography sx={{ mt: 2 }}>
+                <strong>Imagem:</strong>
+              </Typography>
               <img
                 src={`CAMINHO_DA_IMAGEM/${refeicao.imagem_nome}`}
                 alt="Imagem da refeição"

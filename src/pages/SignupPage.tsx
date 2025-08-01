@@ -1,5 +1,6 @@
+// src/pages/SignupPage.tsx
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // trocado axios por api
 import { Card, CardContent, Typography, TextField, Button, Box, Avatar, Snackbar, Alert } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +22,7 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:8000/api/user/signup', form);
+      await api.post('/user/signup', form); // trocado axios.post(...) por api.post(...)
       setSnackbar({ open: true, message: 'Cadastro realizado com sucesso!', severity: 'success' });
       setTimeout(() => navigate('/login'), 1500); // Redireciona para login
     } catch (err: any) {
