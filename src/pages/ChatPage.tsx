@@ -180,7 +180,7 @@ export default function ChatPage() {
           bgcolor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
           overflowX: 'auto',
-          display: 'flex',
+          display: { xs: 'flex', md: 'none' },
           gap: 1,
         }}
       >
@@ -264,21 +264,8 @@ export default function ChatPage() {
           py: 1,
           bgcolor: theme.palette.background.paper,
           borderTop: `1px solid ${theme.palette.divider}`,
-          display: 'flex',
-          gap: 1,
-          alignItems: 'center',
         }}
       >
-        <IconButton component="label" disabled={imgLoading}>
-          <PhotoCameraIcon />
-          <input
-            hidden
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={e => e.target.files && handleFile(e.target.files[0])}
-          />
-        </IconButton>
         <TextField
           fullWidth
           placeholder="Digite sua pergunta..."
@@ -287,6 +274,20 @@ export default function ChatPage() {
           multiline
           maxRows={4}
           InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton component="label" disabled={imgLoading}>
+                  <PhotoCameraIcon />
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={e => e.target.files && handleFile(e.target.files[0])}
+                  />
+                </IconButton>
+              </InputAdornment>
+            ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton type="submit" disabled={!mensagem.trim() || imgLoading}>
