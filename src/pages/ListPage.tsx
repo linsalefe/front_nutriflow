@@ -1,70 +1,104 @@
 // src/pages/ListPage.tsx
-import { useEffect, useState } from 'react';
-import api from '../services/api'; // trocado axios por api
-import { Box, Typography, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useLoading } from '../contexts/LoadingContext';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  CircularProgress,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import api from '../services/api';
+
+interface Refeicao {
+  id: number;
+  nome: string;
+  calorias: number;
+  criado_em: string;
+}
 
 export default function ListPage() {
-  const [refeicoes, setRefeicoes] = useState<any[]>([]);
+  const [refeicoes, setRefeicoes] = useState<Refeicao[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { setLoading } = useLoading();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const drawerWidth = 240;
 
   useEffect(() => {
-    const fetchRefeicoes = async () => {
-      setLoading(true);
+    (async () => {
       try {
-        const res = await api.get('/meal/history'); // trocado axios.get(...) por api.get(...)
-        setRefeicoes(res.data);
-      } catch (err: any) {
+        const { data } = await api.get<Refeicao[]>('/meals');
+        setRefeicoes(data);
+      } catch (e) {
+        console.error(e);
         setError('Erro ao carregar refeições.');
       } finally {
         setLoading(false);
       }
-    };
-    fetchRefeicoes();
-  }, [setLoading]);
+    })();
+  }, []);
 
-  if (error) {
-    return <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>;
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          ml: isMobile ? 0 : `${drawerWidth}px`,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 'calc(100vh - 64px)',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <Box>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        Histórico de Refeições
+    <Box
+      sx={{
+        ml: isMobile ? 0 : `${drawerWidth}px`,
+        px: isMobile ? 2 : 6,
+        py: isMobile ? 3 : 6,
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Refeições
       </Typography>
-      {refeicoes.length === 0 ? (
-        <Alert severity="info" sx={{ mt: 2 }}>Nenhuma refeição encontrada.</Alert>
+
+      {error ? (
+        <Typography color="error">{error}</Typography>
+      ) : refeicoes.length === 0 ? (
+        <Typography>Nenhuma refeição encontrada.</Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ mt: 3, borderRadius: 2 }}>
+        <Paper elevation={2}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>Data</strong></TableCell>
-                <TableCell><strong>Análise</strong></TableCell>
-                <TableCell><strong>Imagem</strong></TableCell>
+                <TableCell>Nome</TableCell>
+                <TableCell>Calorias</TableCell>
+                <TableCell>Data</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {refeicoes.map((ref, idx) => (
-                <TableRow
-                  key={idx}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => navigate(`/meal/${ref.id}`)}
-                >
-                  <TableCell>{new Date(ref.data).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell>{ref.analise}</TableCell>
+              {refeicoes.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>{r.nome}</TableCell>
+                  <TableCell>{r.calorias}</TableCell>
                   <TableCell>
-                    {ref.imagem_nome ? ref.imagem_nome : <em>Sem imagem</em>}
+                    {new Date(r.criado_em).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </Paper>
       )}
     </Box>
   );
