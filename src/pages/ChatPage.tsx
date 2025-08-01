@@ -167,12 +167,21 @@ export default function ChatPage() {
     <Box
       sx={{
         display: 'flex',
-        flexDirection: 'column',
+        justifyContent: 'center',
         height: isMobile ? '100vh' : 'calc(100vh - 64px)',
         bgcolor: theme.palette.background.default,
-        position: 'relative',
+        width: '100%',
       }}
     >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          maxWidth: { xs: '100%', sm: '800px', md: '900px', lg: '1000px' },
+          position: 'relative',
+        }}
+      >
       {/* Sugestões - mobile no topo, desktop oculto */}
       <Box
         sx={{
@@ -405,6 +414,7 @@ export default function ChatPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      </Box>
     </Box>
   );
 }
