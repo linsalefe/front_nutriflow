@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
+  Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
@@ -8,7 +10,9 @@ import {
   Divider,
   Typography,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListIcon from '@mui/icons-material/List';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -33,14 +37,16 @@ const navItems = [
 
 export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const toggle = () => setOpen(!open);
 
-  return (
+  const content = (
     <Box
-      component="nav"
       sx={{
         width: 240,
-        flexShrink: 0,
+        height: '100%',
         bgcolor: theme.palette.primary.dark,
         color: theme.palette.primary.contrastText,
         display: 'flex',
@@ -48,16 +54,12 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
         pt: 2,
       }}
     >
-      {/* Título */}
       <Box sx={{ px: 2, mb: 2 }}>
-        <Typography variant="h6" sx={{ color: 'inherit', fontWeight: 700 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
           NutriFlow
         </Typography>
       </Box>
-
       <Divider sx={{ bgcolor: theme.palette.primary.light }} />
-
-      {/* Navegação */}
       <List sx={{ flexGrow: 1, mt: 1 }}>
         {navItems.map(({ to, label, icon }) => (
           <ListItemButton
@@ -65,43 +67,40 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
             component={NavLink}
             to={to}
             sx={{
-              mb: 0.5,
               mx: 1,
+              mb: 0.5,
               borderRadius: 1.5,
-              '&.active, &:hover': {
-                bgcolor: theme.palette.primary.main,
-              },
-              color: theme.palette.primary.contrastText,
+              color: 'inherit',
+              '&.active, &:hover': { bgcolor: theme.palette.primary.main },
               ...(pathname === to && { bgcolor: theme.palette.primary.main }),
             }}
+            onClick={isMobile ? toggle : undefined}
           >
-            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
               {icon}
             </ListItemIcon>
             <ListItemText primary={label} />
           </ListItemButton>
         ))}
       </List>
-
       <Divider sx={{ bgcolor: theme.palette.primary.light, my: 1 }} />
-
-      {/* Toggle tema */}
       <ListItemButton
-        onClick={onToggleMode}
+        onClick={() => {
+          onToggleMode();
+          if (isMobile) toggle();
+        }}
         sx={{
           mx: 1,
           borderRadius: 1.5,
+          color: 'inherit',
           '&:hover': { bgcolor: theme.palette.primary.main },
-          color: theme.palette.primary.contrastText,
         }}
       >
-        <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
           {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
         </ListItemIcon>
         <ListItemText primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'} />
       </ListItemButton>
-
-      {/* Logout */}
       <ListItemButton
         onClick={() => {
           localStorage.removeItem('token');
@@ -110,15 +109,45 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
         sx={{
           mx: 1,
           borderRadius: 1.5,
+          color: 'inherit',
           '&:hover': { bgcolor: theme.palette.primary.main },
-          color: theme.palette.primary.contrastText,
         }}
       >
-        <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
           <SettingsIcon />
         </ListItemIcon>
         <ListItemText primary="Sair" />
       </ListItemButton>
     </Box>
+  );
+
+  return (
+    <>
+      {isMobile && (
+        <IconButton
+          color="inherit"
+          onClick={toggle}
+          sx={{ position: 'fixed', top: 8, left: 8, zIndex: theme.zIndex.drawer + 1 }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+      <Box component="nav">
+        <Drawer
+          variant={isMobile ? 'temporary' : 'permanent'}
+          open={isMobile ? open : true}
+          onClose={toggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: 240,
+              boxSizing: 'border-box',
+            },
+          }}
+        >
+          {content}
+        </Drawer>
+      </Box>
+    </>
   );
 }
