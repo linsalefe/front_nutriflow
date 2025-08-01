@@ -22,9 +22,9 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // ajusta payload para usar "email" em vez de "username"
+      // agora envia "username" em vez de "email"
       await api.post('/user/signup', {
-        email: form.username,
+        username: form.username,
         password: form.password,
         nome: form.nome,
         objetivo: form.objetivo,
@@ -32,7 +32,7 @@ export default function SignupPage() {
       setSnackbar({ open: true, message: 'Cadastro realizado com sucesso!', severity: 'success' });
       setTimeout(() => navigate('/login'), 1500);
     } catch (err: any) {
-      console.error(err.response?.data); // imprime detalhes do 422 para ajuste
+      console.error(err.response?.data);
       setSnackbar({ open: true, message: 'Erro ao cadastrar usuário.', severity: 'error' });
     }
   };
