@@ -166,7 +166,6 @@ export default function ChatPage() {
   return (
     <Box
       sx={{
-        ml: isMobile ? 0 : '240px',
         display: 'flex',
         flexDirection: 'column',
         height: isMobile ? '100vh' : 'calc(100vh - 64px)',
@@ -191,13 +190,24 @@ export default function ChatPage() {
         ))}
       </Box>
 
-      {/* Histórico de mensagens */}
+      {/* Histórico de mensagens - otimizado estilo WhatsApp */}
       <Box
         sx={{
           flex: 1,
-          px: { xs: 1, sm: 2 },
+          px: { xs: 1, sm: 2, md: 4 }, // padding horizontal ajustado para desktop
           py: { xs: 1, sm: 1 },
           overflowY: 'auto',
+          paddingBottom: { xs: '10px', sm: '10px' },
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: theme.palette.primary.light,
+            borderRadius: '2px',
+          },
         }}
       >
         {historico.map((msg, i) => (
@@ -209,15 +219,15 @@ export default function ChatPage() {
             style={{
               display: 'flex',
               justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              marginBottom: 8,
+              marginBottom: isMobile ? 6 : 8,
             }}
           >
             <Paper
               elevation={1}
               sx={{
                 maxWidth: { xs: '90%', sm: '80%' },
-                px: { xs: 1, sm: 1.5 },
-                py: { xs: 0.8, sm: 1 },
+                px: { xs: 1.2, sm: 1.5 },
+                py: { xs: 1, sm: 1 },
                 bgcolor: msg.role === 'user'
                   ? theme.palette.primary.main
                   : theme.palette.background.paper,
@@ -225,26 +235,53 @@ export default function ChatPage() {
                   ? theme.palette.primary.contrastText
                   : theme.palette.text.primary,
                 borderRadius: msg.role === 'user'
-                  ? '12px 12px 0 12px'
-                  : '12px 12px 12px 0',
+                  ? '18px 18px 4px 18px'
+                  : '18px 18px 18px 4px',
                 position: 'relative',
+                boxShadow: { xs: '0 1px 2px rgba(0,0,0,0.1)', sm: 1 },
               }}
             >
               {msg.type === 'image' && msg.imageUrl && (
                 <Box sx={{ mb: 1 }}>
-                  <img src={msg.imageUrl} alt="" style={{ width: '100%', borderRadius: 6 }} />
+                  <img
+                    src={msg.imageUrl}
+                    alt=""
+                    style={{ 
+                      width: '100%', 
+                      maxWidth: isMobile ? '200px' : '100%',
+                      borderRadius: 8 
+                    }}
+                  />
                 </Box>
               )}
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  whiteSpace: 'pre-wrap',
+                  fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                  lineHeight: { xs: 1.4, sm: 1.5 },
+                  wordBreak: 'break-word',
+                }}
+              >
                 {msg.text}
               </Typography>
               {msg.role === 'bot' && (
                 <IconButton
                   size="small"
                   onClick={() => copyText(msg.text)}
-                  sx={{ position: 'absolute', top: 4, right: 4 }}
+                  sx={{ 
+                    position: 'absolute', 
+                    top: { xs: 2, sm: 4 }, 
+                    right: { xs: 2, sm: 4 },
+                    width: { xs: '24px', sm: '32px' },
+                    height: { xs: '24px', sm: '32px' },
+                  }}
                 >
-                  <ContentCopyIcon fontSize="small" />
+                  <ContentCopyIcon 
+                    sx={{ 
+                      fontSize: { xs: '14px', sm: '16px' }
+                    }} 
+                  />
                 </IconButton>
               )}
             </Paper>
@@ -253,59 +290,116 @@ export default function ChatPage() {
         <div ref={chatEndRef} />
       </Box>
 
-      {/* Input fixo no rodapé */}
+      {/* Input fixo no rodapé - estilo WhatsApp */}
       <Box
         component="form"
         onSubmit={enviarMensagem}
         sx={{
+          position: { xs: 'fixed', sm: 'relative' },
+          bottom: { xs: 0, sm: 'auto' },
+          left: { xs: 0, sm: 'auto' },
+          right: { xs: 0, sm: 'auto' },
           px: { xs: 1, sm: 2 },
-          py: 1,
+          py: { xs: 1, sm: 1 },
           bgcolor: theme.palette.background.paper,
           borderTop: `1px solid ${theme.palette.divider}`,
-          display: 'flex',
-          alignItems: 'center',
-          position: isMobile ? 'fixed' : 'relative',
-          bottom: isMobile ? 0 : 'auto',
-          left: isMobile ? 0 : 'auto',
-          right: isMobile ? 0 : 'auto',
-          boxShadow: isMobile ? '0 -2px 8px rgba(0,0,0,0.1)' : 'none',
-          zIndex: isMobile ? 1000 : 'auto',
+          zIndex: { xs: 1000, sm: 'auto' },
+          boxShadow: { xs: '0 -2px 8px rgba(0,0,0,0.1)', sm: 'none' },
+          paddingBottom: { xs: 'calc(8px + env(safe-area-inset-bottom))', sm: '8px' },
         }}
       >
-        <IconButton component="label" size="small" disabled={imgLoading}>
-          <PhotoCameraIcon fontSize="small" />
-          <input
-            hidden
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={e => e.target.files && handleFile(e.target.files[0])}
-          />
-        </IconButton>
         <TextField
+          fullWidth
+          placeholder="Digite sua pergunta..."
           value={mensagem}
           onChange={e => setMensagem(e.target.value)}
-          placeholder="Digite sua pergunta..."
           multiline
-          maxRows={4}
-          size="small"
-          fullWidth
-          sx={{ mx: 1, '& .MuiInputBase-root': { padding: '4px 8px' } }}
+          maxRows={isMobile ? 4 : 4}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton 
+                  component="label" 
+                  disabled={imgLoading}
+                  sx={{
+                    width: { xs: '40px', sm: '40px' },
+                    height: { xs: '40px', sm: '40px' },
+                    mr: { xs: 0.5, sm: 0 },
+                  }}
+                >
+                  <PhotoCameraIcon 
+                    sx={{ fontSize: { xs: '22px', sm: '24px' } }} 
+                  />
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={e => e.target.files && handleFile(e.target.files[0])}
+                  />
+                </IconButton>
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton 
+                  type="submit" 
+                  disabled={!mensagem.trim() || imgLoading}
+                  sx={{
+                    width: { xs: '40px', sm: '40px' },
+                    height: { xs: '40px', sm: '40px' },
+                    ml: { xs: 0.5, sm: 0 },
+                  }}
+                >
+                  {imgLoading ? (
+                    <CircularProgress size={isMobile ? 18 : 18} />
+                  ) : (
+                    <SendIcon sx={{ fontSize: { xs: '22px', sm: '24px' } }} />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            ),
+            sx: {
+              fontSize: { xs: '16px', sm: '16px' },
+              minHeight: { xs: '48px', sm: '56px' },
+            }
+          }}
+          sx={{
+            bgcolor: theme.palette.background.default,
+            borderRadius: { xs: 6, sm: 2 },
+            '& .MuiOutlinedInput-root': {
+              paddingRight: { xs: '4px', sm: '12px' },
+              paddingLeft: { xs: '4px', sm: '12px' },
+            },
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '16px', sm: '16px' },
+              padding: { xs: '12px 8px', sm: '16.5px 14px' },
+            }
+          }}
         />
-        <IconButton type="submit" size="small" disabled={!mensagem.trim() || imgLoading}>
-          {imgLoading ? <CircularProgress size={18} /> : <SendIcon fontSize="small" />}
-        </IconButton>
       </Box>
 
-      {/* Snackbar */}
+      {/* Snackbar - ajustado para mobile */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={2000}
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ bottom: isMobile ? '64px' : '24px' }}
+        anchorOrigin={{ 
+          vertical: 'bottom', 
+          horizontal: 'center' 
+        }}
+        sx={{
+          bottom: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: '24px' },
+        }}
       >
-        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+        <Alert 
+          severity={snackbar.severity}
+          sx={{
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+          }}
+        >
+          {snackbar.message}
+        </Alert>
       </Snackbar>
     </Box>
   );
