@@ -40,7 +40,7 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const toggle = () => setOpen(!open);
+  const toggle = () => setOpen((s) => !s);
 
   const content = (
     <Box
@@ -59,13 +59,16 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
           NutriFlow
         </Typography>
       </Box>
+
       <Divider sx={{ bgcolor: theme.palette.primary.light }} />
+
       <List sx={{ flexGrow: 1, mt: 1 }}>
         {navItems.map(({ to, label, icon }) => (
           <ListItemButton
             key={to}
             component={NavLink}
             to={to}
+            onClick={isMobile ? toggle : undefined}
             sx={{
               mx: 1,
               mb: 0.5,
@@ -74,7 +77,6 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
               '&.active, &:hover': { bgcolor: theme.palette.primary.main },
               ...(pathname === to && { bgcolor: theme.palette.primary.main }),
             }}
-            onClick={isMobile ? toggle : undefined}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
               {icon}
@@ -83,7 +85,9 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
           </ListItemButton>
         ))}
       </List>
+
       <Divider sx={{ bgcolor: theme.palette.primary.light, my: 1 }} />
+
       <ListItemButton
         onClick={() => {
           onToggleMode();
@@ -101,6 +105,7 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
         </ListItemIcon>
         <ListItemText primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'} />
       </ListItemButton>
+
       <ListItemButton
         onClick={() => {
           localStorage.removeItem('token');
@@ -127,7 +132,12 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
         <IconButton
           color="inherit"
           onClick={toggle}
-          sx={{ position: 'fixed', top: 8, left: 8, zIndex: theme.zIndex.drawer + 1 }}
+          sx={{
+            position: 'fixed',
+            top: theme.spacing(1),
+            left: theme.spacing(2),
+            zIndex: theme.zIndex.drawer + 1,
+          }}
         >
           <MenuIcon />
         </IconButton>

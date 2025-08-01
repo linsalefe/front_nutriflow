@@ -1,6 +1,5 @@
-// src/pages/ImageAnalysisPage.tsx
-import { useState, useEffect, useRef } from 'react';
-import api from '../services/api'; // trocado axios por api
+import React, { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
 import {
   Box,
   Typography,
@@ -31,11 +30,14 @@ export default function ImageAnalysisPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<string>('');
   const [history, setHistory] = useState<AnalysisResult[]>([]);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
   const { setLoading } = useLoading();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  // Preview selecionado
   useEffect(() => {
     if (file) {
       const url = URL.createObjectURL(file);
@@ -44,7 +46,6 @@ export default function ImageAnalysisPage() {
     }
   }, [file]);
 
-  // Seleção de arquivo
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       setFile(e.target.files[0]);
@@ -52,7 +53,6 @@ export default function ImageAnalysisPage() {
     }
   };
 
-  // Drag & drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files.length) {
@@ -62,30 +62,23 @@ export default function ImageAnalysisPage() {
   };
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
-  // Submissão
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
     setLoading(true);
-
     try {
       const formData = new FormData();
       formData.append('file', file);
-
-      const { data } = await api.post( // trocado axios.post(...) por api.post(...)
+      const { data } = await api.post(
         '/image/analyze',
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
       const analysis = typeof data.analise === 'string'
         ? data.analise
         : JSON.stringify(data.analise);
       setResult(analysis);
-      setHistory((h) => [{ fileName: file.name, analysis }, ...h]);
+      setHistory(h => [{ fileName: file.name, analysis }, ...h]);
       setSnackbar({ open: true, message: 'Imagem analisada com sucesso!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Erro ao analisar imagem.', severity: 'error' });
@@ -95,15 +88,28 @@ export default function ImageAnalysisPage() {
   };
 
   return (
-    <Box sx={{ width: '100%', height: 'calc(100vh - 64px)', p: 3, bgcolor: 'grey.100', overflow: 'auto' }}>
+    <Box
+      sx={{
+        width: '100%',
+        height: { xs: 'auto', sm: 'calc(100vh - 64px)' },
+        p: { xs: 2, sm: 3 },
+        bgcolor: 'grey.100',
+        overflow: 'auto',
+      }}
+    >
       <Grid container spacing={3}>
-        {/* AREA DE ANALISE */}
+        {/* ANÁLISE */}
         <Grid item xs={12} md={6}>
           <Paper
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             elevation={4}
-            sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              bgcolor: 'background.paper',
+              height: { xs: 'auto', md: '100%' },
+            }}
           >
             <Typography variant="h5" fontWeight={700} gutterBottom>
               Análise Nutricional por Imagem
@@ -139,11 +145,10 @@ export default function ImageAnalysisPage() {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   disabled={!file}
                   sx={{ alignSelf: 'flex-start', minWidth: 160, py: 1.5, borderRadius: 2 }}
                 >
-                  Analisar{' '}
+                  Analisar
                   {file && <CircularProgress size={18} sx={{ color: 'white', ml: 1 }} />}
                 </Button>
 
@@ -164,8 +169,8 @@ export default function ImageAnalysisPage() {
           </Paper>
         </Grid>
 
-        {/* HISTÓRICO E DICAS */}
-        <Grid item xs={12} md={6}>
+        {/* HISTÓRICO E DICAS (oculto no mobile) */}
+        <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
           <Stack spacing={3} sx={{ height: '100%' }}>
             <Paper elevation={4} sx={{ p: 3, borderRadius: 4, bgcolor: 'background.paper', flex: 1, overflowY: 'auto' }}>
               <Typography variant="h6" gutterBottom>
@@ -210,10 +215,10 @@ export default function ImageAnalysisPage() {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity as any} sx={{ width: '100%' }}>
+        <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

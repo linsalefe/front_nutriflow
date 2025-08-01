@@ -1,6 +1,5 @@
-// src/pages/SettingsPage.tsx
-import { useEffect, useState } from 'react';
-import api from '../services/api'; // trocado axios por api
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import {
   Box,
   Grid,
@@ -28,13 +27,16 @@ export default function SettingsPage() {
   const [form, setForm] = useState({ nome: '', objetivo: '', username: '' });
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-  // Carrega dados do usuário
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get('/user/me'); // trocado axios.get(...) por api.get(...)
+        const res = await api.get('/user/me');
         setForm({
           nome: res.data.nome,
           objetivo: res.data.objetivo,
@@ -46,12 +48,11 @@ export default function SettingsPage() {
     })();
   }, []);
 
-  // Atualiza perfil
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.put('/user/me', form); // trocado axios.put(...) por api.put(...)
+      await api.put('/user/me', form);
       setSnackbar({ open: true, message: 'Dados atualizados!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Erro ao atualizar dados.', severity: 'error' });
@@ -60,12 +61,11 @@ export default function SettingsPage() {
     }
   };
 
-  // Atualiza senha
   const handleSenha = async () => {
     if (!senha) return;
     setLoading(true);
     try {
-      await api.put('/user/password', { password: senha }); // trocado axios.put(...) por api.put(...)
+      await api.put('/user/password', { password: senha });
       setSnackbar({ open: true, message: 'Senha alterada!', severity: 'success' });
       setSenha('');
     } catch {
@@ -75,52 +75,47 @@ export default function SettingsPage() {
     }
   };
 
-  // Atualiza campos de formulário
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   return (
-    <Box sx={{ width: '100%', height: 'calc(100vh - 64px)', overflow: 'auto', p: 3, bgcolor: 'grey.100' }}>
+    <Box
+      sx={{
+        width: '100%',
+        height: { xs: 'auto', sm: 'calc(100vh - 64px)' },
+        overflow: 'auto',
+        p: { xs: 2, sm: 3 },
+        bgcolor: 'grey.100',
+      }}
+    >
       <Grid container spacing={3}>
         {/* FORMULÁRIO */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={4} sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
-            <Typography variant="h5" fontWeight={700} gutterBottom>
-              Dados do Usuário
-            </Typography>
+          <Paper
+            elevation={4}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              bgcolor: 'background.paper',
+              height: { xs: 'auto', md: '100%' },
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
             <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField
-                label="Nome"
-                name="nome"
-                value={form.nome}
-                onChange={handleChange}
-                fullWidth
-                variant="outlined"
-              />
-              <TextField
-                label="E-mail"
-                name="username"
-                value={form.username}
-                onChange={handleChange}
-                disabled
-                fullWidth
-                variant="outlined"
-              />
-              <TextField
-                label="Objetivo"
-                name="objetivo"
-                value={form.objetivo}
-                onChange={handleChange}
-                fullWidth
-                variant="outlined"
-              />
+              <Typography variant="h5" fontWeight={700}>
+                Dados do Usuário
+              </Typography>
+              <TextField label="Nome" name="nome" value={form.nome} onChange={handleChange} fullWidth />
+              <TextField label="E-mail" name="username" value={form.username} onChange={handleChange} disabled fullWidth />
+              <TextField label="Objetivo" name="objetivo" value={form.objetivo} onChange={handleChange} fullWidth />
               <Button
                 type="submit"
                 variant="contained"
                 color="success"
                 disabled={loading}
-                sx={{ mt: 2, borderRadius: 2, py: 1.5 }}
+                sx={{ borderRadius: 2, py: 1.5, mt: 1 }}
               >
                 Salvar Alterações
               </Button>
@@ -128,33 +123,34 @@ export default function SettingsPage() {
 
             <Divider sx={{ my: 4 }} />
 
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Alterar Senha
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <TextField
-                label="Nova Senha"
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                fullWidth={!isMobile}
-                variant="outlined"
-              />
-              <Button
-                variant="contained"
-                color="warning"
-                disabled={loading || !senha}
-                onClick={handleSenha}
-                sx={{ borderRadius: 2, px: 5, py: 1.5, mt: isMobile ? 2 : 0 }}
-              >
-                Salvar Senha
-              </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="h6" fontWeight={600}>
+                Alterar Senha
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <TextField
+                  label="Nova Senha"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  fullWidth
+                />
+                <Button
+                  variant="contained"
+                  color="warning"
+                  disabled={loading || !senha}
+                  onClick={handleSenha}
+                  sx={{ borderRadius: 2, py: 1.5 }}
+                >
+                  Salvar Senha
+                </Button>
+              </Box>
             </Box>
           </Paper>
         </Grid>
 
-        {/* PAINEL DE DICAS */}
-        <Grid item xs={12} md={6}>
+        {/* PAINEL DE DICAS (oculto no mobile) */}
+        <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
           <Paper elevation={4} sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Dicas Rápidas
@@ -188,8 +184,6 @@ export default function SettingsPage() {
                 />
               </ListItem>
             </List>
-
-            {/* Exemplo de gráfico ou estatística */}
             <Box sx={{ mt: 4 }}>
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                 Estatísticas Rápidas
@@ -212,7 +206,7 @@ export default function SettingsPage() {
         onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity as any} sx={{ width: '100%' }}>
+        <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Paper,
   InputAdornment,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SendIcon from '@mui/icons-material/Send';
@@ -45,7 +47,9 @@ export default function ChatPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 1) Carrega histórico salvo
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   useEffect(() => {
     (async () => {
       try {
@@ -64,7 +68,6 @@ export default function ChatPage() {
     })();
   }, []);
 
-  // scroll ao final
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [historico]);
@@ -75,7 +78,6 @@ export default function ChatPage() {
     } catch {}
   };
 
-  // envia texto
   const enviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = mensagem.trim();
@@ -118,7 +120,6 @@ export default function ChatPage() {
     }
   };
 
-  // envia imagem
   const handleFile = async (file: File) => {
     setImgLoading(true);
     const preview = URL.createObjectURL(file);
@@ -171,13 +172,20 @@ export default function ChatPage() {
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
-        height: 'calc(100vh - 64px)',
+        height: { xs: 'auto', md: 'calc(100vh - 64px)' },
         p: 2,
         gap: 2,
       }}
     >
       {/* Chat */}
-      <Box sx={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: { xs: 'auto', md: '100%' },
+        }}
+      >
         <Paper
           elevation={3}
           sx={{
@@ -194,8 +202,16 @@ export default function ChatPage() {
               <Chip key={s} label={s} clickable onClick={() => setMensagem(s)} />
             ))}
           </Box>
+
           {/* Histórico */}
-          <Box sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: 'grey.50' }}>
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              p: 2,
+              bgcolor: 'grey.50',
+            }}
+          >
             {historico.map((msg, i) => (
               <motion.div
                 key={i}
@@ -245,6 +261,7 @@ export default function ChatPage() {
             ))}
             <div ref={chatEndRef} />
           </Box>
+
           {/* Envio */}
           <Box
             component="form"
@@ -282,8 +299,13 @@ export default function ChatPage() {
         </Paper>
       </Box>
 
-      {/* Dicas */}
-      <Box sx={{ flex: 1 }}>
+      {/* Dicas (oculto no mobile) */}
+      <Box
+        sx={{
+          flex: 0.5,
+          display: { xs: 'none', md: 'block' },
+        }}
+      >
         <Paper
           elevation={3}
           sx={{ height: '100%', p: 2, borderRadius: 2, overflowY: 'auto' }}

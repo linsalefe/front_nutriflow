@@ -1,5 +1,14 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, useTheme, ButtonGroup, Button } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  useTheme,
+  useMediaQuery,
+  ButtonGroup,
+  Button,
+} from '@mui/material';
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,16 +36,30 @@ const periods = [
   { key: '1y', label: '1 ano' },
 ];
 
-export default function ChartCard({ data, activePeriod, onChangePeriod }: ChartCardProps) {
+export default function ChartCard({
+  data,
+  activePeriod,
+  onChangePeriod,
+}: ChartCardProps) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const chartHeight = isMobile ? 200 : 260;
 
   return (
     <Card sx={{ borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant={isMobile ? 'subtitle1' : 'h6'} gutterBottom>
           Evolução de Peso
         </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            mb: 2,
+            overflowX: 'auto',
+          }}
+        >
           <ButtonGroup size="small" variant="outlined">
             {periods.map((p) => (
               <Button
@@ -49,20 +72,32 @@ export default function ChartCard({ data, activePeriod, onChangePeriod }: ChartC
             ))}
           </ButtonGroup>
         </Box>
-        <Box sx={{ height: 260 }}>
-          {data.length ? (
+
+        <Box sx={{ height: chartHeight }}>
+          {data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <LineChart
+                data={data}
+                margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={['dataMin', 'dataMax']} />
-                <Tooltip />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis
+                  domain={['dataMin', 'dataMax']}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <Tooltip
+                  wrapperStyle={{ fontSize: isMobile ? 12 : 14 }}
+                />
                 <Line
                   type="monotone"
                   dataKey="weight"
                   stroke={theme.palette.primary.main}
                   strokeWidth={3}
-                  dot={{ r: 4 }}
+                  dot={{ r: isMobile ? 2 : 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -74,9 +109,13 @@ export default function ChartCard({ data, activePeriod, onChangePeriod }: ChartC
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'text.secondary',
+                p: 2,
+                textAlign: 'center',
               }}
             >
-              Poucos dados para exibir o gráfico.
+              <Typography variant="body2">
+                Poucos dados para exibir o gráfico.
+              </Typography>
             </Box>
           )}
         </Box>
