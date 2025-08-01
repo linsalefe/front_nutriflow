@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+// src/components/Sidebar.tsx
+import React from 'react';
 import {
   Box,
   Drawer,
-  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
@@ -12,7 +12,6 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListIcon from '@mui/icons-material/List';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -25,6 +24,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 interface SidebarProps {
   mode: 'light' | 'dark';
   onToggleMode: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
 const navItems = [
@@ -35,14 +36,17 @@ const navItems = [
   { to: '/settings', label: 'Configurações', icon: <SettingsIcon /> },
 ];
 
-export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
+export default function Sidebar({
+  mode,
+  onToggleMode,
+  mobileOpen,
+  onMobileClose,
+}: SidebarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const toggle = () => setOpen((s) => !s);
 
-  const content = (
+  const drawerContent = (
     <Box
       sx={{
         width: 240,
@@ -68,7 +72,7 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
             key={to}
             component={NavLink}
             to={to}
-            onClick={isMobile ? toggle : undefined}
+            onClick={isMobile ? onMobileClose : undefined}
             sx={{
               mx: 1,
               mb: 0.5,
@@ -91,7 +95,7 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
       <ListItemButton
         onClick={() => {
           onToggleMode();
-          if (isMobile) toggle();
+          if (isMobile) onMobileClose();
         }}
         sx={{
           mx: 1,
@@ -127,37 +131,21 @@ export default function Sidebar({ mode, onToggleMode }: SidebarProps) {
   );
 
   return (
-    <>
-      {isMobile && (
-        <IconButton
-          color="inherit"
-          onClick={toggle}
-          sx={{
-            position: 'fixed',
-            top: theme.spacing(1),
-            left: theme.spacing(2),
-            zIndex: theme.zIndex.drawer + 1,
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-      )}
-      <Box component="nav">
-        <Drawer
-          variant={isMobile ? 'temporary' : 'permanent'}
-          open={isMobile ? open : true}
-          onClose={toggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            '& .MuiDrawer-paper': {
-              width: 240,
-              boxSizing: 'border-box',
-            },
-          }}
-        >
-          {content}
-        </Drawer>
-      </Box>
-    </>
+    <Box component="nav">
+      <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        open={isMobile ? mobileOpen : true}
+        onClose={onMobileClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 240,
+            boxSizing: 'border-box',
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+    </Box>
   );
 }

@@ -1,11 +1,18 @@
-import React from 'react';
-import { Box, CssBaseline, Toolbar } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+// src/layouts/MainLayout.tsx
+import React, { useState } from 'react';
+import {
+  Box,
+  CssBaseline,
+  Toolbar,
+  useTheme,
+  useMediaQuery,
+  LinearProgress,
+} from '@mui/material';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useLoading } from '../contexts/LoadingContext';
+import { useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import { useLoading } from '../contexts/LoadingContext';
-import LinearProgress from '@mui/material/LinearProgress';
-import { useLocation } from 'react-router-dom';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,31 +26,46 @@ export default function MainLayout({
   onToggleMode,
 }: MainLayoutProps) {
   const { loading } = useLoading();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
   const location = useLocation();
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f7fe' }}>
       <CssBaseline />
 
-      {/* Sidebar */}
-      <Sidebar mode={mode} onToggleMode={onToggleMode} />
+      {/* Header com botão de menu no mobile */}
+      <Header
+        mode={mode}
+        onToggleMode={onToggleMode}
+        onMenuClick={handleDrawerToggle}
+      />
 
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
-      >
-        {/* Header */}
-        <Header mode={mode} onToggleMode={onToggleMode} />
+      {/* Sidebar controlado por main */}
+      <Sidebar
+        mode={mode}
+        onToggleMode={onToggleMode}
+        mobileOpen={mobileOpen}
+        onMobileClose={handleDrawerToggle}
+      />
+
+      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Toolbar sx={{ minHeight: 64 }} />
 
-        {/* Loading bar */}
         {loading && (
           <LinearProgress
-            sx={{ position: 'fixed', top: 64, left: 240, right: 0, zIndex: 1200 }}
+            sx={{
+              position: 'fixed',
+              top: 64,
+              left: isMobile ? 0 : 240,
+              right: 0,
+              zIndex: theme.zIndex.drawer + 1,
+            }}
           />
         )}
 
-        {/* Page content with transition */}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
