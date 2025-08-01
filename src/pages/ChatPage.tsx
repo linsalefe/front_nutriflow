@@ -173,57 +173,31 @@ export default function ChatPage() {
         position: 'relative',
       }}
     >
-      {/* Sugestões - melhoradas para mobile */}
+      {/* Sugestões - apenas para desktop */}
       <Box
         sx={{
-          px: { xs: 1, sm: 2 },
-          py: { xs: 0.5, sm: 1 },
+          px: 2,
+          py: 1,
           bgcolor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
           overflowX: 'auto',
-          display: { xs: 'flex', md: 'none' },
-          gap: { xs: 0.5, sm: 1 },
-          minHeight: { xs: '48px', sm: 'auto' },
-          alignItems: 'center',
-          '&::-webkit-scrollbar': {
-            height: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            backgroundColor: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: theme.palette.primary.light,
-            borderRadius: '2px',
-          },
+          display: { xs: 'none', md: 'flex' },
+          gap: 1,
         }}
       >
         {suggestions.map(s => (
-          <Chip 
-            key={s} 
-            label={s} 
-            clickable 
-            onClick={() => setMensagem(s)} 
-            sx={{ 
-              flexShrink: 0,
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              height: { xs: '28px', sm: '32px' },
-              px: { xs: 1, sm: 1.5 },
-              '& .MuiChip-label': {
-                px: { xs: 0.5, sm: 1 },
-              }
-            }} 
-          />
+          <Chip key={s} label={s} clickable onClick={() => setMensagem(s)} sx={{ flexShrink: 0 }} />
         ))}
       </Box>
 
-      {/* Histórico de mensagens - melhorado para mobile */}
+      {/* Histórico de mensagens - otimizado estilo WhatsApp */}
       <Box
         sx={{
           flex: 1,
           px: { xs: 1, sm: 2 },
-          py: { xs: 0.5, sm: 1 },
+          py: { xs: 1, sm: 1 },
           overflowY: 'auto',
-          paddingBottom: { xs: '80px', sm: '10px' }, // Espaço extra no mobile para o input fixo
+          paddingBottom: { xs: '10px', sm: '10px' },
           '&::-webkit-scrollbar': {
             width: '4px',
           },
@@ -251,9 +225,9 @@ export default function ChatPage() {
             <Paper
               elevation={1}
               sx={{
-                maxWidth: { xs: '85%', sm: '80%' },
-                px: { xs: 1, sm: 1.5 },
-                py: { xs: 0.75, sm: 1 },
+                maxWidth: { xs: '90%', sm: '80%' },
+                px: { xs: 1.2, sm: 1.5 },
+                py: { xs: 1, sm: 1 },
                 bgcolor: msg.role === 'user'
                   ? theme.palette.primary.main
                   : theme.palette.background.paper,
@@ -261,10 +235,10 @@ export default function ChatPage() {
                   ? theme.palette.primary.contrastText
                   : theme.palette.text.primary,
                 borderRadius: msg.role === 'user'
-                  ? '12px 12px 0 12px'
-                  : '12px 12px 12px 0',
+                  ? '18px 18px 4px 18px'
+                  : '18px 18px 18px 4px',
                 position: 'relative',
-                minHeight: { xs: '36px', sm: 'auto' },
+                boxShadow: { xs: '0 1px 2px rgba(0,0,0,0.1)', sm: 1 },
               }}
             >
               {msg.type === 'image' && msg.imageUrl && (
@@ -316,7 +290,7 @@ export default function ChatPage() {
         <div ref={chatEndRef} />
       </Box>
 
-      {/* Input fixo no rodapé - melhorado para mobile */}
+      {/* Input fixo no rodapé - estilo WhatsApp */}
       <Box
         component="form"
         onSubmit={enviarMensagem}
@@ -331,6 +305,8 @@ export default function ChatPage() {
           borderTop: `1px solid ${theme.palette.divider}`,
           zIndex: { xs: 1000, sm: 'auto' },
           boxShadow: { xs: '0 -2px 8px rgba(0,0,0,0.1)', sm: 'none' },
+          // Adiciona safe area para dispositivos com notch
+          paddingBottom: { xs: 'calc(8px + env(safe-area-inset-bottom))', sm: '8px' },
         }}
       >
         <TextField
@@ -339,7 +315,7 @@ export default function ChatPage() {
           value={mensagem}
           onChange={e => setMensagem(e.target.value)}
           multiline
-          maxRows={isMobile ? 3 : 4}
+          maxRows={isMobile ? 4 : 4}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -347,13 +323,14 @@ export default function ChatPage() {
                   component="label" 
                   disabled={imgLoading}
                   sx={{
-                    width: { xs: '36px', sm: '40px' },
-                    height: { xs: '36px', sm: '40px' },
+                    width: { xs: '40px', sm: '40px' },
+                    height: { xs: '40px', sm: '40px' },
+                    mr: { xs: 0.5, sm: 0 },
                   }}
                 >
                   <PhotoCameraIcon 
                     sx={{ 
-                      fontSize: { xs: '20px', sm: '24px' }
+                      fontSize: { xs: '22px', sm: '24px' }
                     }} 
                   />
                   <input
@@ -372,16 +349,17 @@ export default function ChatPage() {
                   type="submit" 
                   disabled={!mensagem.trim() || imgLoading}
                   sx={{
-                    width: { xs: '36px', sm: '40px' },
-                    height: { xs: '36px', sm: '40px' },
+                    width: { xs: '40px', sm: '40px' },
+                    height: { xs: '40px', sm: '40px' },
+                    ml: { xs: 0.5, sm: 0 },
                   }}
                 >
                   {imgLoading ? (
-                    <CircularProgress size={isMobile ? 16 : 18} />
+                    <CircularProgress size={isMobile ? 18 : 18} />
                   ) : (
                     <SendIcon 
                       sx={{ 
-                        fontSize: { xs: '20px', sm: '24px' }
+                        fontSize: { xs: '22px', sm: '24px' }
                       }} 
                     />
                   )}
@@ -389,20 +367,20 @@ export default function ChatPage() {
               </InputAdornment>
             ),
             sx: {
-              fontSize: { xs: '14px', sm: '16px' },
-              minHeight: { xs: '44px', sm: '56px' },
+              fontSize: { xs: '16px', sm: '16px' },
+              minHeight: { xs: '48px', sm: '56px' },
             }
           }}
           sx={{
             bgcolor: theme.palette.background.default,
-            borderRadius: { xs: 3, sm: 2 },
+            borderRadius: { xs: 6, sm: 2 },
             '& .MuiOutlinedInput-root': {
-              paddingRight: { xs: '8px', sm: '12px' },
-              paddingLeft: { xs: '8px', sm: '12px' },
+              paddingRight: { xs: '4px', sm: '12px' },
+              paddingLeft: { xs: '4px', sm: '12px' },
             },
             '& .MuiInputBase-input': {
-              fontSize: { xs: '14px', sm: '16px' },
-              padding: { xs: '8px 4px', sm: '16.5px 14px' },
+              fontSize: { xs: '16px', sm: '16px' },
+              padding: { xs: '12px 8px', sm: '16.5px 14px' },
             }
           }}
         />
@@ -418,7 +396,7 @@ export default function ChatPage() {
           horizontal: 'center' 
         }}
         sx={{
-          bottom: { xs: '80px', sm: '24px' }, // Ajusta posição no mobile para não sobrepor o input
+          bottom: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: '24px' },
         }}
       >
         <Alert 
