@@ -52,8 +52,10 @@ export default function MainLayout({
       />
 
       <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Espaço para o AppBar */}
         <Toolbar sx={{ minHeight: 64 }} />
 
+        {/* Barra de loading */}
         {loading && (
           <LinearProgress
             sx={{
@@ -66,6 +68,7 @@ export default function MainLayout({
           />
         )}
 
+        {/* Conteúdo com animação de transição */}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -75,7 +78,9 @@ export default function MainLayout({
             transition={{ duration: 0.4 }}
             style={{ flex: 1, overflowY: 'auto' }}
           >
-            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>{children}</Box>
+            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+              {children}
+            </Box>
           </motion.div>
         </AnimatePresence>
       </Box>
