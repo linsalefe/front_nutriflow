@@ -205,27 +205,21 @@ export default function ChatPage() {
           boxShadow: { xs: 'none', md: '0 0 40px rgba(0,0,0,0.08)' },
         }}
       >
-        {/* Sugestões - mobile no topo, desktop oculto */}
+        {/* Sugestões - mobile no topo com tamanho reduzido */}
         <Box
           sx={{
-            px: 2,
-            py: 1.5,
+            px: 1.5,
+            py: 1,
             background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%)',
             borderBottom: '1px solid rgba(0,0,0,0.06)',
             overflowX: 'auto',
             display: { xs: 'flex', md: 'none' },
-            gap: 1,
+            gap: 0.75,
             backdropFilter: 'blur(10px)',
             '&::-webkit-scrollbar': {
-              height: '4px',
+              display: 'none',
             },
-            '&::-webkit-scrollbar-track': {
-              backgroundColor: 'transparent',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: theme.palette.primary.light,
-              borderRadius: '2px',
-            },
+            '-webkit-overflow-scrolling': 'touch',
           }}
         >
           {suggestions.map(s => (
@@ -234,16 +228,22 @@ export default function ChatPage() {
               label={s} 
               clickable 
               onClick={() => setMensagem(s)} 
+              size="small"
               sx={{ 
                 flexShrink: 0,
                 background: 'linear-gradient(135deg, #81c784 0%, #66bb6a 100%)',
                 color: 'white',
                 border: 'none',
                 fontWeight: 500,
+                fontSize: '0.75rem',
+                height: '28px',
+                padding: '0 10px',
                 transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(102, 187, 106, 0.4)',
+                '& .MuiChip-label': {
+                  padding: '0 4px',
+                },
+                '&:active': {
+                  transform: 'scale(0.95)',
                 }
               }} 
             />
@@ -412,8 +412,8 @@ export default function ChatPage() {
             bottom: { xs: 0, sm: 'auto' },
             left: { xs: 0, sm: 'auto' },
             right: { xs: 0, sm: 'auto' },
-            px: { xs: 2, sm: 3 },
-            py: { xs: 2, sm: 2 },
+            px: { xs: 1.5, sm: 3 },
+            py: { xs: 1.5, sm: 2 },
             background: 'linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(250,250,250,0.98))',
             borderTop: '1px solid rgba(0,0,0,0.06)',
             zIndex: { xs: 1000, sm: 'auto' },
@@ -436,8 +436,8 @@ export default function ChatPage() {
                     component="label"
                     disabled={imgLoading}
                     sx={{
-                      width: 44,
-                      height: 44,
+                      width: 40,
+                      height: 40,
                       mr: 0.5,
                       background: 'linear-gradient(135deg, #81c784 0%, #66bb6a 100%)',
                       color: 'white',
@@ -451,7 +451,7 @@ export default function ChatPage() {
                       }
                     }}
                   >
-                    <PhotoCameraIcon sx={{ fontSize: 22 }} />
+                    <PhotoCameraIcon sx={{ fontSize: 20 }} />
                     <input
                       hidden
                       type="file"
@@ -468,8 +468,8 @@ export default function ChatPage() {
                     type="submit"
                     disabled={!mensagem.trim() || imgLoading}
                     sx={{
-                      width: 44,
-                      height: 44,
+                      width: 40,
+                      height: 40,
                       ml: 0.5,
                       background: !mensagem.trim() || imgLoading 
                         ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
@@ -483,9 +483,9 @@ export default function ChatPage() {
                     }}
                   >
                     {imgLoading ? (
-                      <CircularProgress size={20} sx={{ color: 'white' }} />
+                      <CircularProgress size={18} sx={{ color: 'white' }} />
                     ) : (
-                      <SendIcon sx={{ fontSize: 22 }} />
+                      <SendIcon sx={{ fontSize: 20 }} />
                     )}
                   </IconButton>
                 </InputAdornment>
