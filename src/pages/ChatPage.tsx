@@ -205,50 +205,7 @@ export default function ChatPage() {
           boxShadow: { xs: 'none', md: '0 0 40px rgba(0,0,0,0.08)' },
         }}
       >
-        {/* Sugestões - mobile no topo com tamanho reduzido */}
-        <Box
-          sx={{
-            px: 1.5,
-            py: 1,
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%)',
-            borderBottom: '1px solid rgba(0,0,0,0.06)',
-            overflowX: 'auto',
-            display: { xs: 'flex', md: 'none' },
-            gap: 0.75,
-            backdropFilter: 'blur(10px)',
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
-            '-webkit-overflow-scrolling': 'touch',
-          }}
-        >
-          {suggestions.map(s => (
-            <Chip 
-              key={s} 
-              label={s} 
-              clickable 
-              onClick={() => setMensagem(s)} 
-              size="small"
-              sx={{ 
-                flexShrink: 0,
-                background: 'linear-gradient(135deg, #81c784 0%, #66bb6a 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 500,
-                fontSize: '0.75rem',
-                height: '28px',
-                padding: '0 10px',
-                transition: 'all 0.3s ease',
-                '& .MuiChip-label': {
-                  padding: '0 4px',
-                },
-                '&:active': {
-                  transform: 'scale(0.95)',
-                }
-              }} 
-            />
-          ))}
-        </Box>
+        {/* Sugestões - apenas desktop */}
 
         {/* Histórico de mensagens - estilo WhatsApp otimizado */}
         <Box
