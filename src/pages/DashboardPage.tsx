@@ -87,14 +87,26 @@ export default function DashboardPage() {
     setDialogOpen(true);
   };
   const handleCloseDialog = () => setDialogOpen(false);
+
   const handleConfirm = async () => {
     const weight = parseFloat(newWeight.replace(',', '.'));
-    const height = parseFloat(newHeight.replace(',', '.'));
-    if (isNaN(weight) || weight <= 0 || isNaN(height) || height <= 0) return;
+    if (isNaN(weight) || weight <= 0) return;
+
+    const hasExistingHeight = metrics?.height_cm != null;
+    const heightValue = newHeight.trim() !== ''
+      ? parseFloat(newHeight.replace(',', '.'))
+      : undefined;
+    if (!hasExistingHeight && (heightValue === undefined || isNaN(heightValue) || heightValue <= 0)) {
+      return;
+    }
 
     setLoadingAction(true);
     try {
-      await api.patch('/user', { height_cm: height });
+      // Atualiza altura apenas se o usuário forneceu um novo valor
+      if (heightValue !== undefined) {
+        await api.patch('/user', { height_cm: heightValue });
+      }
+      // Registra novo peso
       await api.post('/weight-logs', { weight });
       setDialogOpen(false);
       fetchMetrics(period);
@@ -173,15 +185,17 @@ export default function DashboardPage() {
               onChange={(e) => setNewWeight(e.target.value)}
               helperText="Use ponto ou vírgula"
             />
-            <TextField
-              margin="dense"
-              label="Altura (cm)"
-              fullWidth
-              value={newHeight}
-              onChange={(e) => setNewHeight(e.target.value)}
-              helperText="Ex.: 170"
-              sx={{ mt: 2 }}
-            />
+            {metrics.height_cm == null && (
+              <TextField
+                margin="dense"
+                label="Altura (cm)"
+                fullWidth
+                value={newHeight}
+                onChange={(e) => setNewHeight(e.target.value)}
+                helperText="Ex.: 170"
+                sx={{ mt: 2 }}
+              />
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog} disabled={loadingAction}>
