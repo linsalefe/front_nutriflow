@@ -57,8 +57,9 @@ export default function ChatPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get<Mensagem[]>('/chat/history');
-        setHistorico(data);
+        const { data } = await api.get<{ history: Mensagem[] }>('/chat/history');
+        // Corrigido: acessar data.history em vez de data diretamente
+        setHistorico(data.history || []);
       } catch {
         setHistorico([
           {
