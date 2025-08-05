@@ -15,13 +15,15 @@ import {
   useTheme,
   useMediaQuery,
   Avatar,
+  Fade,
+  Zoom,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SendIcon from '@mui/icons-material/Send';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from '../contexts/LoadingContext';
 
 interface Mensagem {
@@ -33,14 +35,16 @@ interface Mensagem {
 }
 
 const suggestions = [
-  'Quantas calorias tem arroz, feijão e frango?',
+  'Quantas calorias tem uma banana?',
   'Qual a quantidade ideal de proteína por dia?',
   'Como balancear proteínas e carboidratos?',
+  'Dicas para emagrecer com saúde',
 ];
 
 export default function ChatPage() {
   const [mensagem, setMensagem] = useState('');
   const [historico, setHistorico] = useState<Mensagem[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -58,13 +62,12 @@ export default function ChatPage() {
     (async () => {
       try {
         const { data } = await api.get<{ history: Mensagem[] }>('/chat/history');
-        // Corrigido: acessar data.history em vez de data diretamente
         setHistorico(data.history || []);
       } catch {
         setHistorico([
           {
             role: 'bot',
-            text: 'Olá! Eu sou sua IA Nutricionista 😊\nPergunte algo ou escolha uma sugestão abaixo.',
+            text: 'Olá! Eu sou a Lina, sua assistente nutricional 😊\n\nComo posso ajudar você hoje? Você pode me perguntar sobre calorias, proteínas, dietas ou enviar fotos de alimentos!',
             type: 'text',
             created_at: new Date().toISOString(),
           },
@@ -75,7 +78,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [historico]);
+  }, [historico, isTyping]);
 
   const saveMessage = async (msg: Mensagem) => {
     try {
@@ -83,7 +86,27 @@ export default function ChatPage() {
     } catch {}
   };
 
-  const enviarMensagem = async (e: React.FormEvent) => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setMensagem(suggestion);
+  };
+
+  // Detecta Enter sem Shift
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      enviarMensagem(e);
+    }
+  };
+
+  // Aceita FormEvent ou KeyboardEvent
+  const enviarMensagem = async (
+    e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLDivElement>
+  ) => {
     e.preventDefault();
     const text = mensagem.trim();
     if (!text) return;
@@ -97,6 +120,7 @@ export default function ChatPage() {
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
     setLoading(true);
+    setIsTyping(true);
 
     try {
       const { data } = await api.post<{ response: string }>('/chat/send', { message: text });
@@ -111,7 +135,7 @@ export default function ChatPage() {
     } catch {
       const errMsg: Mensagem = {
         role: 'bot',
-        text: 'Desculpe, houve um erro ao conectar.',
+        text: 'Desculpe, houve um erro ao conectar. Por favor, tente novamente.',
         type: 'text',
         created_at: new Date().toISOString(),
       };
@@ -119,6 +143,7 @@ export default function ChatPage() {
       saveMessage(errMsg);
     } finally {
       setLoading(false);
+      setIsTyping(false);
       setMensagem('');
     }
   };
@@ -135,6 +160,7 @@ export default function ChatPage() {
     };
     setHistorico(h => [...h, userMsg]);
     saveMessage(userMsg);
+    setIsTyping(true);
 
     try {
       const form = new FormData();
@@ -153,18 +179,19 @@ export default function ChatPage() {
       };
       setHistorico(h => [...h, botMsg]);
       saveMessage(botMsg);
-      setSnackbar({ open: true, message: 'Imagem analisada!', severity: 'success' });
+      setSnackbar({ open: true, message: 'Imagem analisada com sucesso!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Falha ao analisar imagem.', severity: 'error' });
     } finally {
       setImgLoading(false);
+      setIsTyping(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const copyText = (text: string) => {
     navigator.clipboard.writeText(text);
-    setSnackbar({ open: true, message: 'Copiado!', severity: 'success' });
+    setSnackbar({ open: true, message: 'Mensagem copiada!', severity: 'success' });
   };
 
   return (
@@ -206,9 +233,35 @@ export default function ChatPage() {
           boxShadow: { xs: 'none', md: '0 0 40px rgba(0,0,0,0.08)' },
         }}
       >
-        {/* Sugestões - apenas desktop */}
+        {!isMobile && historico.length <= 1 && (
+          <Fade in timeout={800}>
+            <Box sx={{ px: 3, pt: 3, pb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Sugestões de perguntas:
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {suggestions.map((suggestion, index) => (
+                  <Chip
+                    key={index}
+                    label={suggestion}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    sx={{
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(102, 187, 106, 0.1)',
+                      border: '1px solid rgba(102, 187, 106, 0.3)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(102, 187, 106, 0.2)',
+                        borderColor: 'rgba(102, 187, 106, 0.5)',
+                      },
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Fade>
+        )}
 
-        {/* Histórico de mensagens - estilo WhatsApp otimizado */}
         <Box
           sx={{
             flex: 1,
@@ -232,136 +285,238 @@ export default function ChatPage() {
             },
           }}
         >
-          {historico.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              style={{
-                display: 'flex',
-                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                marginBottom: isMobile ? 12 : 16,
-                alignItems: 'flex-end',
-                gap: 8,
-              }}
-            >
-              {msg.role === 'bot' && (
-                <Avatar 
-                  sx={{ 
-                    width: 32, 
-                    height: 32,
-                    background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
-                    boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
-                  }}
-                >
-                  <SmartToyIcon sx={{ fontSize: 18 }} />
-                </Avatar>
-              )}
-              
-              <Paper
-                elevation={0}
-                sx={{
-                  maxWidth: { xs: '85%', sm: '75%' },
-                  px: { xs: 2, sm: 2.5 },
-                  py: { xs: 1.5, sm: 1.5 },
-                  background: msg.role === 'user'
-                    ? 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)'
-                    : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
-                  color: msg.role === 'user'
-                    ? 'white'
-                    : theme.palette.text.primary,
-                  borderRadius: msg.role === 'user'
-                    ? { xs: '20px 20px 4px 20px', sm: '20px 20px 4px 20px' }
-                    : { xs: '20px 20px 20px 4px', sm: '20px 20px 20px 4px' },
-                  position: 'relative',
-                  boxShadow: msg.role === 'user' 
-                    ? '0 4px 16px rgba(102, 187, 106, 0.25)'
-                    : '0 2px 12px rgba(0,0,0,0.08)',
-                  border: msg.role === 'bot' ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                  transition: 'transform 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-1px)',
-                  }
+          <AnimatePresence>
+            {historico.map((msg, i) => (
+              <motion.div
+                key={`${msg.role}-${i}`}
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 500, 
+                  damping: 30,
+                  delay: i === historico.length - 1 ? 0.1 : 0
+                }}
+                style={{
+                  display: 'flex',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: isMobile ? 12 : 16,
+                  alignItems: 'flex-end',
+                  gap: 8,
                 }}
               >
-                {msg.type === 'image' && msg.imageUrl && (
-                  <Box 
-                    sx={{ 
-                      mb: 1.5,
-                      overflow: 'hidden',
-                      borderRadius: 2,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    }}
-                  >
-                    <img
-                      src={msg.imageUrl}
-                      alt=""
-                      style={{
-                        width: '100%',
-                        maxWidth: isMobile ? '200px' : '100%',
-                        display: 'block',
-                        borderRadius: 8,
-                      }}
-                    />
-                  </Box>
-                )}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    whiteSpace: 'pre-wrap',
-                    fontSize: { xs: '0.9rem', sm: '0.95rem' },
-                    lineHeight: 1.6,
-                    wordBreak: 'break-word',
-                    fontWeight: msg.role === 'user' ? 500 : 400,
-                  }}
-                >
-                  {msg.text}
-                </Typography>
                 {msg.role === 'bot' && (
-                  <IconButton
-                    size="small"
-                    onClick={() => copyText(msg.text)}
+                  <Zoom in timeout={300}>
+                    <Avatar 
+                      sx={{ 
+                        width: 32, 
+                        height: 32,
+                        background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
+                        boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
+                      }}
+                    >
+                      <SmartToyIcon sx={{ fontSize: 18 }} />
+                    </Avatar>
+                  </Zoom>
+                )}
+                
+                <Box sx={{ maxWidth: { xs: '85%', sm: '75%' } }}>
+                  <Paper
+                    elevation={0}
                     sx={{
-                      position: 'absolute',
-                      top: 4,
-                      right: 4,
-                      width: 28,
-                      height: 28,
-                      opacity: 0,
-                      transition: 'opacity 0.2s ease',
-                      backgroundColor: 'rgba(0,0,0,0.04)',
-                      '.MuiPaper-root:hover &': {
-                        opacity: 1,
-                      },
+                      px: { xs: 2, sm: 2.5 },
+                      py: { xs: 1.5, sm: 1.5 },
+                      background: msg.role === 'user'
+                        ? 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)'
+                        : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                      color: msg.role === 'user'
+                        ? 'white'
+                        : theme.palette.text.primary,
+                      borderRadius: msg.role === 'user'
+                        ? { xs: '20px 20px 4px 20px', sm: '20px 20px 4px 20px' }
+                        : { xs: '20px 20px 20px 4px', sm: '20px 20px 20px 4px' },
+                      position: 'relative',
+                      boxShadow: msg.role === 'user' 
+                        ? '0 4px 16px rgba(102, 187, 106, 0.25)'
+                        : '0 2px 12px rgba(0,0,0,0.08)',
+                      border: msg.role === 'bot' ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        backgroundColor: 'rgba(0,0,0,0.08)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: msg.role === 'user' 
+                          ? '0 6px 20px rgba(102, 187, 106, 0.35)'
+                          : '0 4px 16px rgba(0,0,0,0.12)',
                       }
                     }}
                   >
-                    <ContentCopyIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                )}
-              </Paper>
+                    {msg.type === 'image' && msg.imageUrl && (
+                      <Box 
+                        sx={{ 
+                          mb: 1.5,
+                          overflow: 'hidden',
+                          borderRadius: 2,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        }}
+                      >
+                        <img
+                          src={msg.imageUrl}
+                          alt=""
+                          style={{
+                            width: '100%',
+                            maxWidth: isMobile ? '200px' : '100%',
+                            display: 'block',
+                            borderRadius: 8,
+                          }}
+                        />
+                      </Box>
+                    )}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                        lineHeight: 1.6,
+                        wordBreak: 'break-word',
+                        fontWeight: msg.role === 'user' ? 500 : 400,
+                      }}
+                    >
+                      {msg.text}
+                    </Typography>
+                    {msg.role === 'bot' && (
+                      <IconButton
+                        size="small"
+                        onClick={() => copyText(msg.text)}
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          width: 28,
+                          height: 28,
+                          opacity: 0,
+                          transition: 'opacity 0.2s ease',
+                          backgroundColor: 'rgba(0,0,0,0.04)',
+                          '.MuiPaper-root:hover &': {
+                            opacity: 1,
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(0,0,0,0.08)',
+                          }
+                        }}
+                      >
+                        <ContentCopyIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    )}
+                  </Paper>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'block',
+                      mt: 0.5,
+                      px: 1,
+                      opacity: 0.6,
+                      textAlign: msg.role === 'user' ? 'right' : 'left',
+                      color: msg.role === 'user' ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                    }}
+                  >
+                    {formatTime(msg.created_at)}
+                  </Typography>
+                </Box>
 
-              {msg.role === 'user' && (
-                <Avatar 
-                  sx={{ 
-                    width: 32, 
-                    height: 32,
-                    background: 'linear-gradient(135deg, #90a4ae 0%, #607d8b 100%)',
-                    boxShadow: '0 2px 8px rgba(96, 125, 139, 0.3)',
+                {msg.role === 'user' && (
+                  <Zoom in timeout={300}>
+                    <Avatar 
+                      sx={{ 
+                        width: 32, 
+                        height: 32,
+                        background: 'linear-gradient(135deg, #90a4ae 0%, #607d8b 100%)',
+                        boxShadow: '0 2px 8px rgba(96, 125, 139, 0.3)',
+                      }}
+                    >
+                      <PersonIcon sx={{ fontSize: 18 }} />
+                    </Avatar>
+                  </Zoom>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 16,
+              }}
+            >
+              <Avatar 
+                sx={{ 
+                  width: 32, 
+                  height: 32,
+                  background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
+                  boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
+                }}
+              >
+                <SmartToyIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Paper
+                elevation={0}
+                sx={{
+                  px: 3,
+                  py: 1.5,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '20px 20px 20px 4px',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <Box
+                  component={motion.div}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.4, repeat: Infinity }}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: '#66bb6a',
                   }}
-                >
-                  <PersonIcon sx={{ fontSize: 18 }} />
-                </Avatar>
-              )}
+                />
+                <Box
+                  component={motion.div}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: '#66bb6a',
+                  }}
+                />
+                <Box
+                  component={motion.div}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.4 }}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: '#66bb6a',
+                  }}
+                />
+              </Paper>
             </motion.div>
-          ))}
+          )}
+          
           <div ref={chatEndRef} />
         </Box>
 
-        {/* Input fixo no rodapé - estilo WhatsApp para mobile */}
         <Box
           component="form"
           onSubmit={enviarMensagem}
@@ -385,14 +540,16 @@ export default function ChatPage() {
             placeholder="Digite sua pergunta sobre nutrição..."
             value={mensagem}
             onChange={e => setMensagem(e.target.value)}
+            onKeyDown={handleKeyDown}
             multiline
             maxRows={4}
+            disabled={isTyping}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <IconButton
                     component="label"
-                    disabled={imgLoading}
+                    disabled={imgLoading || isTyping}
                     sx={{
                       width: 40,
                       height: 40,
@@ -424,12 +581,12 @@ export default function ChatPage() {
                 <InputAdornment position="end">
                   <IconButton
                     type="submit"
-                    disabled={!mensagem.trim() || imgLoading}
+                    disabled={!mensagem.trim() || imgLoading || isTyping}
                     sx={{
                       width: 40,
                       height: 40,
                       ml: 0.5,
-                      background: !mensagem.trim() || imgLoading 
+                      background: !mensagem.trim() || imgLoading || isTyping
                         ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
                         : 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)',
                       color: 'white',
@@ -440,7 +597,7 @@ export default function ChatPage() {
                       },
                     }}
                   >
-                    {imgLoading ? (
+                    {imgLoading || isTyping ? (
                       <CircularProgress size={18} sx={{ color: 'white' }} />
                     ) : (
                       <SendIcon sx={{ fontSize: 20 }} />
@@ -462,6 +619,9 @@ export default function ChatPage() {
                   borderColor: '#66bb6a',
                   borderWidth: 2,
                 },
+                '&.Mui-disabled': {
+                  backgroundColor: 'rgba(245, 245, 245, 0.9)',
+                }
               },
             }}
             sx={{
@@ -473,7 +633,6 @@ export default function ChatPage() {
           />
         </Box>
 
-        {/* Snackbar - ajustado para mobile */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
