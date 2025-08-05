@@ -76,6 +76,7 @@ export default function DashboardPage() {
       setLoadingAction(false);
     }
   };
+
   useEffect(() => {
     fetchMetrics(period);
   }, [period]);
@@ -92,21 +93,20 @@ export default function DashboardPage() {
     const weight = parseFloat(newWeight.replace(',', '.'));
     if (isNaN(weight) || weight <= 0) return;
 
-    const hasExistingHeight = metrics?.height_cm != null;
-    const heightValue = newHeight.trim() !== ''
-      ? parseFloat(newHeight.replace(',', '.'))
-      : undefined;
-    if (!hasExistingHeight && (heightValue === undefined || isNaN(heightValue) || heightValue <= 0)) {
+    // Se não houver altura salva, exigir nova altura
+    const needsHeight = !metrics?.height_cm || metrics.height_cm <= 0;
+    const heightValue =
+      newHeight.trim() !== '' ? parseFloat(newHeight.replace(',', '.')) : undefined;
+
+    if (needsHeight && (heightValue === undefined || isNaN(heightValue) || heightValue <= 0)) {
       return;
     }
 
     setLoadingAction(true);
     try {
-      // Atualiza altura apenas se o usuário forneceu um novo valor
       if (heightValue !== undefined) {
         await api.patch('/user', { height_cm: heightValue });
       }
-      // Registra novo peso
       await api.post('/weight-logs', { weight });
       setDialogOpen(false);
       fetchMetrics(period);
@@ -185,7 +185,7 @@ export default function DashboardPage() {
               onChange={(e) => setNewWeight(e.target.value)}
               helperText="Use ponto ou vírgula"
             />
-            {metrics.height_cm == null && (
+            {(!metrics.height_cm || metrics.height_cm <= 0) && (
               <TextField
                 margin="dense"
                 label="Altura (cm)"
