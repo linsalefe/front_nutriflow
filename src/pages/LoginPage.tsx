@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
-import { useState } from 'react';
-import api from '../services/api'; // trocado axios por api
+import React, { useState } from 'react';
+import api from '../services/api';
 import {
   Card,
   CardContent,
@@ -10,30 +10,39 @@ import {
   Box,
   Avatar,
   Snackbar,
-  Alert,
-  Link,
+  Alert
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await api.post('/user/login', { // trocado axios.post(...) por api.post(...)
-        username,
-        password,
+      const { data } = await api.post('/user/login', { username, password });
+      localStorage.setItem('token', data.access_token);
+      setSnackbar({
+        open: true,
+        message: 'Login realizado com sucesso!',
+        severity: 'success'
       });
-      localStorage.setItem('token', res.data.access_token);
-      setSnackbar({ open: true, message: 'Login realizado com sucesso!', severity: 'success' });
       setTimeout(() => navigate('/'), 1500);
-    } catch (err: any) {
-      setSnackbar({ open: true, message: 'Usuário ou senha inválidos.', severity: 'error' });
+    } catch ({ response }) {
+      const msg = response?.data?.detail || 'Erro ao fazer login';
+      setSnackbar({
+        open: true,
+        message: msg,
+        severity: 'error'
+      });
     }
   };
 
@@ -44,12 +53,19 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'background.default',
+        bgcolor: 'background.default'
       }}
     >
       <Card sx={{ maxWidth: 400, p: 4, borderRadius: 2, boxShadow: 3 }}>
         <CardContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: 2
+            }}
+          >
             <Avatar sx={{ bgcolor: 'primary.main', mb: 1 }}>
               <LockOutlinedIcon />
             </Avatar>
@@ -58,12 +74,12 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          <Box component="form" sx={{ mt: 2 }} onSubmit={handleSubmit}>
+          <Box component="form" sx={{ mt: 1 }} onSubmit={handleSubmit}>
             <TextField
               margin="normal"
               required
               fullWidth
-              label="E-mail"
+              label="Usuário"
               value={username}
               onChange={e => setUsername(e.target.value)}
               autoFocus
@@ -81,8 +97,7 @@ export default function LoginPage() {
               type="submit"
               fullWidth
               variant="contained"
-              color="primary"
-              sx={{ mt: 2, py: 1.5 }}
+              sx={{ mt: 3, py: 1.5 }}
             >
               Login
             </Button>
@@ -91,9 +106,13 @@ export default function LoginPage() {
           <Box textAlign="center" mt={2}>
             <Typography variant="body2">
               Ainda não tem conta?{' '}
-              <Link component={RouterLink} to="/signup" underline="hover">
+              <Button
+                component="a"
+                href="/signup"
+                sx={{ textTransform: 'none', p: 0, minWidth: 0 }}
+              >
                 Cadastre-se
-              </Link>
+              </Button>
             </Typography>
           </Box>
         </CardContent>
@@ -105,10 +124,10 @@ export default function LoginPage() {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity as any} sx={{ width: '100%' }}>
+        <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
     </Box>
-  );
+);
 }
