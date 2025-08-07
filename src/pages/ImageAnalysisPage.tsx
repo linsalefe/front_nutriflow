@@ -91,14 +91,11 @@ export default function ImageAnalysisPage() {
     <Box
       sx={{
         width: '100%',
-        minHeight: 'calc(100vh - 64px)',
-        // Remove qualquer padding/margin que cause overflow
-        p: 0,
-        m: 0,
+        minHeight: 'calc(100vh - 128px)',
         bgcolor: 'grey.50',
       }}
     >
-      <Grid container spacing={3} sx={{ p: 3, m: 0, width: '100%' }}>
+      <Grid container spacing={3} sx={{ height: '100%' }}>
         {/* COLUNA DE ANÁLISE */}
         <Grid item xs={12} lg={6}>
           <Paper
