@@ -36,8 +36,8 @@ export default function LoginPage() {
         severity: 'success'
       });
       setTimeout(() => navigate('/'), 1500);
-    } catch ({ response }) {
-      const msg = response?.data?.detail || 'Erro ao fazer login';
+    } catch (error: any) {
+      const msg = error.response?.data?.detail || 'Erro ao fazer login';
       setSnackbar({
         open: true,
         message: msg,
@@ -129,5 +129,5 @@ export default function LoginPage() {
         </Alert>
       </Snackbar>
     </Box>
-);
+  );
 }
