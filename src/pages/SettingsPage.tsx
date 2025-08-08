@@ -1,3 +1,4 @@
+// src/pages/SettingsPage.tsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import {
@@ -16,6 +17,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Avatar,
+  Stack,
 } from '@mui/material';
 import SecurityIcon from '@mui/icons-material/Security';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
@@ -24,8 +27,10 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 export default function SettingsPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [form, setForm] = useState({ nome: '', objetivo: '', username: '' });
   const [senha, setSenha] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -38,10 +43,11 @@ export default function SettingsPage() {
       try {
         const res = await api.get('/user/me');
         setForm({
-          nome: res.data.nome,
-          objetivo: res.data.objetivo,
-          username: res.data.username,
+          nome: res.data.nome || '',
+          objetivo: res.data.objetivo || '',
+          username: res.data.username || '',
         });
+        setAvatarUrl(res.data.avatar_url);
       } catch {
         setSnackbar({ open: true, message: 'Erro ao carregar dados.', severity: 'error' });
       }
@@ -52,7 +58,8 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.put('/user/me', form);
+      // Atualiza apenas campos editáveis conforme backend (PATCH /api/user)
+      await api.patch('/user', { nome: form.nome, objetivo: form.objetivo });
       setSnackbar({ open: true, message: 'Dados atualizados!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Erro ao atualizar dados.', severity: 'error' });
@@ -78,6 +85,24 @@ export default function SettingsPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleAvatar = async (file: File) => {
+    if (!file) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/user/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setAvatarUrl(data.avatar_url);
+      setSnackbar({ open: true, message: 'Foto atualizada!', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Falha ao enviar avatar.', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -86,11 +111,11 @@ export default function SettingsPage() {
         overflow: 'auto',
         p: { xs: 2, sm: 3 },
         bgcolor: 'grey.100',
-        marginLeft: { xs: 0, md: '240px' } // ajuste para desktop respeitar sidebar
+        marginLeft: { xs: 0, md: '240px' },
       }}
     >
       <Grid container spacing={3}>
-        {/* FORMULÁRIO */}
+        {/* FORMULÁRIO + AVATAR */}
         <Grid item xs={12} md={6}>
           <Paper
             elevation={4}
@@ -101,9 +126,29 @@ export default function SettingsPage() {
               height: { xs: 'auto', md: '100%' },
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'space-between',
+              gap: 3,
             }}
           >
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Avatar src={avatarUrl} sx={{ width: 64, height: 64 }}>
+                {!avatarUrl && (form.nome?.[0]?.toUpperCase() || form.username?.[0]?.toUpperCase() || 'U')}
+              </Avatar>
+              <Button
+                variant="outlined"
+                component="label"
+                disabled={loading}
+                sx={{ textTransform: 'none' }}
+              >
+                Trocar foto
+                <input
+                  hidden
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => e.target.files && handleAvatar(e.target.files[0])}
+                />
+              </Button>
+            </Stack>
+
             <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Typography variant="h5" fontWeight={700}>
                 Dados do Usuário
@@ -122,7 +167,7 @@ export default function SettingsPage() {
               </Button>
             </Box>
 
-            <Divider sx={{ my: 4 }} />
+            <Divider sx={{ my: 2 }} />
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Typography variant="h6" fontWeight={600}>
@@ -200,7 +245,6 @@ export default function SettingsPage() {
         </Grid>
       </Grid>
 
-      {/* SNACKBAR */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
