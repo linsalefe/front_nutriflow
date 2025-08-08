@@ -93,6 +93,8 @@ export default function ImageAnalysisPage() {
         width: '100%',
         minHeight: 'calc(100vh - 128px)',
         bgcolor: 'grey.50',
+        marginLeft: { xs: 0, md: '240px' }, // Ajuste para não sobrepor o sidebar
+        p: 3
       }}
     >
       <Grid container spacing={3} sx={{ height: '100%' }}>
