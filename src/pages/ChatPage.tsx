@@ -51,6 +51,7 @@ export default function ChatPage() {
     severity: 'success',
   });
   const [imgLoading, setImgLoading] = useState(false);
+  const [me, setMe] = useState<{ avatar_url?: string }>({});
   const { setLoading } = useLoading();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,8 +62,12 @@ export default function ChatPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get<{ history: Mensagem[] }>('/chat/history');
-        setHistorico(data.history || []);
+        const [{ data: hist }, { data: meData }] = await Promise.all([
+          api.get<{ history: Mensagem[] }>('/chat/history'),
+          api.get('/user/me'),
+        ]);
+        setHistorico(hist.history || []);
+        setMe(meData || {});
       } catch {
         setHistorico([
           {
@@ -203,6 +208,7 @@ export default function ChatPage() {
         width: '100%',
         position: 'relative',
         backgroundColor: '#f5f5f5',
+        marginLeft: { xs: 0, md: '240px' }, // evita sobreposição do sidebar no desktop
         backgroundImage: `
           radial-gradient(circle at 20% 80%, rgba(120, 200, 120, 0.1) 0%, transparent 50%),
           radial-gradient(circle at 80% 20%, rgba(100, 180, 100, 0.1) 0%, transparent 50%),
@@ -427,6 +433,7 @@ export default function ChatPage() {
                 {msg.role === 'user' && (
                   <Zoom in timeout={300}>
                     <Avatar 
+                      src={me.avatar_url || undefined}
                       sx={{ 
                         width: 32, 
                         height: 32,
@@ -434,7 +441,7 @@ export default function ChatPage() {
                         boxShadow: '0 2px 8px rgba(96, 125, 139, 0.3)',
                       }}
                     >
-                      <PersonIcon sx={{ fontSize: 18 }} />
+                      {!me.avatar_url && <PersonIcon sx={{ fontSize: 18 }} />}
                     </Avatar>
                   </Zoom>
                 )}
