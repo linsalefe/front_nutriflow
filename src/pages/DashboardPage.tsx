@@ -90,7 +90,7 @@ export default function DashboardPage() {
     fetchMetrics(period);
   }, [period]);
 
-  // Handlers do modal
+  // Modal
   const handleOpenDialog = () => {
     setNewWeight('');
     setNewHeight('');
