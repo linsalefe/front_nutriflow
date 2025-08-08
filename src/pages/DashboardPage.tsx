@@ -52,15 +52,24 @@ export default function DashboardPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 240;
 
-  // Extrai nome do JWT
+  // Nome do usuário: tenta /user/me, cai pro token se necessário
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    (async () => {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserName(payload.nome || payload.username || 'Usuário');
-      } catch {}
-    }
+        const { data } = await api.get('/user/me');
+        setUserName((data?.nome || data?.username || 'Usuário') as string);
+      } catch {
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            setUserName(payload?.nome || payload?.username || 'Usuário');
+          } catch {
+            setUserName('Usuário');
+          }
+        }
+      }
+    })();
   }, []);
 
   // Busca métricas
@@ -93,7 +102,6 @@ export default function DashboardPage() {
     const weight = parseFloat(newWeight.replace(',', '.'));
     if (isNaN(weight) || weight <= 0) return;
 
-    // Se não houver altura salva, exigir nova altura
     const needsHeight = !metrics?.height_cm || metrics.height_cm <= 0;
     const heightValue =
       newHeight.trim() !== '' ? parseFloat(newHeight.replace(',', '.')) : undefined;
