@@ -1,26 +1,25 @@
-import axios from 'axios';
+// src/services/api.ts
+import axios, { AxiosHeaders } from 'axios';
 
 const baseURL =
   (import.meta as any).env?.VITE_API_URL ||
-  'https://back-nutriflow-ycr2.onrender.com/api'; // fallback prod
-  // Para dev local, defina VITE_API_URL=http://localhost:8000/api
+  'https://back-nutriflow-ycr2.onrender.com/api';
 
 const api = axios.create({
   baseURL,
   timeout: 30000,
 });
 
-// Injeta o token antes de cada requisição
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    (config.headers ??= {});
-    config.headers.Authorization = `Bearer ${token}`;
+    // garante tipo correto para headers no Axios v1+
+    const headers = (config.headers ??= new AxiosHeaders());
+    (headers as AxiosHeaders).set('Authorization', `Bearer ${token}`);
   }
   return config;
 });
 
-// Trata 401: limpa token
 api.interceptors.response.use(
   (res) => res,
   (err) => {
