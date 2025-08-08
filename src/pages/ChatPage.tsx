@@ -21,7 +21,6 @@ import {
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SendIcon from '@mui/icons-material/Send';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from '../contexts/LoadingContext';
@@ -40,6 +39,9 @@ const suggestions = [
   'Como balancear proteínas e carboidratos?',
   'Dicas para emagrecer com saúde',
 ];
+
+// Caminho do avatar da Lina (coloque o arquivo em /public)
+const LINA_AVATAR = '/lina-avatar.png';
 
 export default function ChatPage() {
   const [mensagem, setMensagem] = useState('');
@@ -315,16 +317,17 @@ export default function ChatPage() {
               >
                 {msg.role === 'bot' && (
                   <Zoom in timeout={300}>
-                    <Avatar 
-                      sx={{ 
-                        width: 32, 
+                    <Avatar
+                      src={LINA_AVATAR}
+                      alt="Lina"
+                      sx={{
+                        width: 32,
                         height: 32,
-                        background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
                         boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
+                        border: '2px solid #fff',
+                        bgcolor: '#7AA374',
                       }}
-                    >
-                      <SmartToyIcon sx={{ fontSize: 18 }} />
-                    </Avatar>
+                    />
                   </Zoom>
                 )}
                 
@@ -404,7 +407,7 @@ export default function ChatPage() {
                           transition: 'opacity 0.2s ease',
                           backgroundColor: 'rgba(0,0,0,0.04)',
                           '.MuiPaper-root:hover &': {
-                            opacity: 1,
+                        opacity: 1,
                           },
                           '&:hover': {
                             backgroundColor: 'rgba(0,0,0,0.08)',
@@ -461,16 +464,17 @@ export default function ChatPage() {
                 marginBottom: 16,
               }}
             >
-              <Avatar 
-                sx={{ 
-                  width: 32, 
+              <Avatar
+                src={LINA_AVATAR}
+                alt="Lina"
+                sx={{
+                  width: 32,
                   height: 32,
-                  background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
                   boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
+                  border: '2px solid #fff',
+                  bgcolor: '#7AA374',
                 }}
-              >
-                <SmartToyIcon sx={{ fontSize: 18 }} />
-              </Avatar>
+              />
               <Paper
                 elevation={0}
                 sx={{
