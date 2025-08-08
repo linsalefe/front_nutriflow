@@ -86,6 +86,7 @@ export default function SettingsPage() {
         overflow: 'auto',
         p: { xs: 2, sm: 3 },
         bgcolor: 'grey.100',
+        marginLeft: { xs: 0, md: '240px' } // ajuste para desktop respeitar sidebar
       }}
     >
       <Grid container spacing={3}>
