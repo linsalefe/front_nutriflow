@@ -25,7 +25,7 @@ import ChartCard from '../components/ChartCard';
 import ProgressCard from '../components/ProgressCard';
 
 interface LogItem {
-  date: string;
+  date: string; // ISO vindo do backend
   weight: number;
 }
 
@@ -38,6 +38,17 @@ interface DashboardMetrics {
   bmi?: number;
   history: LogItem[];
 }
+
+const formatDateBR = (value: string) => {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+};
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -52,7 +63,7 @@ export default function DashboardPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const drawerWidth = 240;
 
-  // Nome do usuário: tenta /user/me, cai pro token se necessário
+  // Nome do usuário
   useEffect(() => {
     (async () => {
       try {
@@ -218,6 +229,12 @@ export default function DashboardPage() {
     );
   }
 
+  // Datas formatadas para o ChartCard (dd/MM HH:mm)
+  const formattedHistory: LogItem[] = history.map((h) => ({
+    ...h,
+    date: formatDateBR(h.date),
+  }));
+
   // Layout principal
   return (
     <Box
@@ -260,7 +277,7 @@ export default function DashboardPage() {
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <ChartCard data={history} activePeriod={period} onChangePeriod={setPeriod} />
+          <ChartCard data={formattedHistory} activePeriod={period} onChangePeriod={setPeriod} />
         </Grid>
         <Grid item xs={12} md={4}>
           <ProgressCard
