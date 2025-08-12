@@ -2,7 +2,7 @@
 import axios, { AxiosHeaders } from 'axios';
 
 const baseURL =
-  ((import.meta as any).env?.VITE_API_URL?.toString() || 'https://back-nutriflow-ycr2.onrender.com/api')
+  ((import.meta as any).env?.VITE_API_URL?.toString() || 'http://34.192.147.6/api')
     .replace(/\/+$/, ''); // remove barra final
 
 const api = axios.create({
