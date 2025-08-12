@@ -1,3 +1,4 @@
+// src/components/ChartCard.tsx
 import React from 'react';
 import {
   Card,
@@ -20,7 +21,7 @@ import {
 } from 'recharts';
 
 interface LogItem {
-  date: string;
+  date: string;   // ISO (UTC)
   weight: number;
 }
 
@@ -35,6 +36,17 @@ const periods = [
   { key: '30d', label: '30 dias' },
   { key: '1y', label: '1 ano' },
 ];
+
+const formatDateBR = (value: string | number | Date) => {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+};
 
 export default function ChartCard({
   data,
@@ -78,18 +90,22 @@ export default function ChartCard({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={data}
-                margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+                margin={{ top: 8, right: 16, left: 0, bottom: 12 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: isMobile ? 10 : 12 }}
+                  tickFormatter={formatDateBR}
+                  minTickGap={isMobile ? 30 : 16}
                 />
                 <YAxis
                   domain={['dataMin', 'dataMax']}
                   tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <Tooltip
+                  labelFormatter={formatDateBR}
+                  formatter={(value: any) => [`${value}`, 'peso (kg)']}
                   wrapperStyle={{ fontSize: isMobile ? 12 : 14 }}
                 />
                 <Line
@@ -98,6 +114,7 @@ export default function ChartCard({
                   stroke={theme.palette.primary.main}
                   strokeWidth={3}
                   dot={{ r: isMobile ? 2 : 4 }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
