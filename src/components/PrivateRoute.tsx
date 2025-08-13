@@ -1,10 +1,10 @@
-// src/routes/PrivateRoute.tsx
-import { useEffect, useState } from 'react';
+// src/components/PrivateRoute.tsx
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import api, { getToken, setToken } from '../services/api';
 
-type Props = { children: JSX.Element };
+type Props = { children: React.ReactElement };
 
 export default function PrivateRoute({ children }: Props) {
   const [status, setStatus] = useState<'checking' | 'allowed' | 'login' | 'pay'>('checking');
@@ -12,19 +12,15 @@ export default function PrivateRoute({ children }: Props) {
 
   useEffect(() => {
     const token = getToken();
-
-    // Sem token → não chama /me
     if (!token) {
       setStatus('login');
       return;
     }
-
     let mounted = true;
     (async () => {
       try {
         const { data } = await api.get('/user/me');
         localStorage.setItem('me', JSON.stringify(data));
-
         const userHasAccess = Boolean(data?.is_admin || data?.has_access);
         if (!mounted) return;
         setStatus(userHasAccess ? 'allowed' : 'pay');
@@ -34,7 +30,6 @@ export default function PrivateRoute({ children }: Props) {
         setStatus('login');
       }
     })();
-
     return () => { mounted = false; };
   }, [location.pathname]);
 
@@ -45,14 +40,7 @@ export default function PrivateRoute({ children }: Props) {
       </Box>
     );
   }
-
-  if (status === 'login') {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  if (status === 'pay') {
-    return <Navigate to="/pagamento" replace state={{ from: location }} />;
-  }
-
+  if (status === 'login') return <Navigate to="/login" replace state={{ from: location }} />;
+  if (status === 'pay')   return <Navigate to="/pagamento" replace state={{ from: location }} />;
   return children;
 }
