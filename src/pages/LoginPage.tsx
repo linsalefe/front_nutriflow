@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
 import React, { useState } from 'react';
-import api from '../services/api';
+import api, { loginJson } from '../services/api';
 import {
   Card,
   CardContent,
@@ -10,7 +10,8 @@ import {
   Box,
   Avatar,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading]   = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -27,22 +29,26 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username || !password) {
+      setSnackbar({ open: true, message: 'Preencha usuário e senha.', severity: 'error' });
+      return;
+    }
+    setLoading(true);
     try {
-      const { data } = await api.post('/user/login', { username, password });
-      localStorage.setItem('token', data.access_token);
-      setSnackbar({
-        open: true,
-        message: 'Login realizado com sucesso!',
-        severity: 'success'
-      });
-      setTimeout(() => navigate('/'), 1500);
+      // login em JSON + salva token no axios/localStorage
+      await loginJson(username.trim(), password);
+
+      // validação do token chamando /me
+      const { data: me } = await api.get('/user/me');
+      localStorage.setItem('me', JSON.stringify(me));
+
+      setSnackbar({ open: true, message: 'Login realizado com sucesso!', severity: 'success' });
+      setTimeout(() => navigate('/'), 1000);
     } catch (error: any) {
-      const msg = error.response?.data?.detail || 'Erro ao fazer login';
-      setSnackbar({
-        open: true,
-        message: msg,
-        severity: 'error'
-      });
+      const msg = error?.response?.data?.detail || 'Erro ao fazer login';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,19 +59,13 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'background.default'
+        bgcolor: 'background.default',
+        p: 2
       }}
     >
-      <Card sx={{ maxWidth: 400, p: 4, borderRadius: 2, boxShadow: 3 }}>
+      <Card sx={{ width: '100%', maxWidth: 420, p: 4, borderRadius: 3, boxShadow: 6 }}>
         <CardContent>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              mb: 2
-            }}
-          >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
             <Avatar sx={{ bgcolor: 'primary.main', mb: 1 }}>
               <LockOutlinedIcon />
             </Avatar>
@@ -74,32 +74,31 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          <Box component="form" sx={{ mt: 1 }} onSubmit={handleSubmit}>
+          <Box component="form" sx={{ mt: 1, display: 'grid', gap: 2 }} onSubmit={handleSubmit}>
             <TextField
-              margin="normal"
               required
               fullWidth
               label="Usuário"
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               autoFocus
             />
             <TextField
-              margin="normal"
               required
               fullWidth
               label="Senha"
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, py: 1.5 }}
+              sx={{ mt: 1.5, py: 1.5 }}
+              disabled={loading}
             >
-              Login
+              {loading ? <CircularProgress size={22} /> : 'Login'}
             </Button>
           </Box>
 
@@ -120,7 +119,7 @@ export default function LoginPage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={2000}
+        autoHideDuration={2500}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
