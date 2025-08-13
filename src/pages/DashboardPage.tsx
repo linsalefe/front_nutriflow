@@ -40,7 +40,7 @@ interface LogItem {
 }
 
 interface ChartLog {
-  date: string; // usado pelo ChartCard
+  date: string;
   weight: number;
 }
 
@@ -68,7 +68,6 @@ const formatDateBR = (value: string | number | Date) => {
 };
 
 const isoToLocalInput = (iso: string) => {
-  // retorna 'YYYY-MM-DDTHH:mm' para <input type="datetime-local">
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -81,7 +80,6 @@ const isoToLocalInput = (iso: string) => {
 };
 
 const localInputToIso = (localValue: string) => {
-  // recebe 'YYYY-MM-DDTHH:mm' (local) e devolve ISO UTC
   if (!localValue) return undefined;
   const local = new Date(localValue);
   if (isNaN(local.getTime())) return undefined;
@@ -89,6 +87,7 @@ const localInputToIso = (localValue: string) => {
 };
 
 export default function DashboardPage() {
+  // ---- HOOKS NO TOPO (ordem fixa) ----
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [period, setPeriod] = useState<string>('30d');
   const [userName, setUserName] = useState<string>('Usuário');
@@ -99,38 +98,40 @@ export default function DashboardPage() {
   const [newHeight, setNewHeight] = useState<string>('');
   const [loadingAction, setLoadingAction] = useState(false);
 
-  // dialog histórico (listar/editar/apagar)
+  // dialog histórico
   const [historyOpen, setHistoryOpen] = useState(false);
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [errorLogs, setErrorLogs] = useState<string | null>(null);
 
-  // editar item
+  // editar
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState<string>('');
   const [editWeight, setEditWeight] = useState<string>('');
-  const [editDateLocal, setEditDateLocal] = useState<string>(''); // datetime-local
+  const [editDateLocal, setEditDateLocal] = useState<string>('');
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // NÃO chamar /user/me aqui (evita 401 e mount antes do PrivateRoute).
   useEffect(() => {
-    (async () => {
+    const meStr = localStorage.getItem('me');
+    if (meStr) {
       try {
-        const { data } = await api.get('/user/me');
-        setUserName((data?.nome || data?.username || 'Usuário') as string);
+        const me = JSON.parse(meStr);
+        setUserName(me?.nome || me?.username || 'Usuário');
+        return;
+      } catch {}
+    }
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserName(payload?.nome || payload?.username || 'Usuário');
       } catch {
-        const token = localStorage.getItem('token');
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            setUserName(payload?.nome || payload?.username || 'Usuário');
-          } catch {
-            setUserName('Usuário');
-          }
-        }
+        setUserName('Usuário');
       }
-    })();
+    }
   }, []);
 
   const fetchMetrics = async (p: string) => {
@@ -138,7 +139,15 @@ export default function DashboardPage() {
     try {
       const url = `/dashboard/metrics${p ? `?period=${p}` : ''}`;
       const { data } = await api.get<DashboardMetrics>(url);
-      setMetrics(data);
+      setMetrics({
+        objective: data.objective,
+        height_cm: data.height_cm,
+        initial_weight: data.initial_weight,
+        current_weight: data.current_weight,
+        weight_lost: data.weight_lost,
+        bmi: data.bmi,
+        history: Array.isArray(data.history) ? data.history : [],
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -154,7 +163,7 @@ export default function DashboardPage() {
     setLoadingLogs(true);
     setErrorLogs(null);
     try {
-      const { data } = await api.get<LogItem[]>('/weight-logs'); // pega todos
+      const { data } = await api.get<LogItem[]>('/weight-logs');
       setLogs(data);
     } catch (e: any) {
       console.error(e);
@@ -169,7 +178,32 @@ export default function DashboardPage() {
     await fetchLogs();
   };
 
-  // Modal registrar
+  // ✅ useMemo ANTES de qualquer retorno condicional
+  const historyChart: ChartLog[] = useMemo(() => {
+    const h = metrics?.history ?? [];
+    return h.map((item) => ({ date: item.date, weight: item.weight }));
+  }, [metrics]);
+
+  // ----- A partir daqui pode haver returns -----
+
+  // Loading inicial
+  if (!metrics) {
+    return (
+      <Box
+        sx={{
+          ml: isMobile ? 0 : `${drawerWidth}px`,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 'calc(100vh - 64px)',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Ações: registrar/editar/apagar
   const handleOpenDialog = () => {
     setNewWeight('');
     setNewHeight('');
@@ -205,7 +239,6 @@ export default function DashboardPage() {
     }
   };
 
-  // editar
   const onClickEdit = (log: LogItem) => {
     setEditId(log.id);
     setEditWeight(String(log.weight).replace('.', ','));
@@ -231,7 +264,6 @@ export default function DashboardPage() {
     }
   };
 
-  // apagar
   const onDelete = async (id: string) => {
     if (!confirm('Remover este registro?')) return;
     try {
@@ -243,31 +275,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Loading inicial
-  if (!metrics) {
-    return (
-      <Box
-        sx={{
-          ml: isMobile ? 0 : `${drawerWidth}px`,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: 'calc(100vh - 64px)',
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  const historyChart: ChartLog[] = useMemo(() => {
-    const h = metrics.history || [];
-    return h.map((item) => ({
-      date: item.date, // já ISO
-      weight: item.weight,
-    }));
-  }, [metrics]);
-
   const bmiValue = metrics.bmi ?? 0;
   const classification =
     bmiValue < 18.5
@@ -277,8 +284,6 @@ export default function DashboardPage() {
       : bmiValue < 30
       ? 'Sobrepeso'
       : 'Obesidade';
-
-  const empty = (metrics.history || []).length === 0;
 
   return (
     <Box
@@ -306,7 +311,6 @@ export default function DashboardPage() {
         Dashboard
       </Typography>
 
-      {/* Cards + Gráfico */}
       <Grid container spacing={3}>
         <Grid item>
           <StatsCard icon={<FitnessCenterIcon />} label="Objetivo" value={metrics.objective || '-'} highlight />

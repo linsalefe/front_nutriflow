@@ -1,68 +1,58 @@
-import { Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+// src/routes/PrivateRoute.tsx
+import { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
+import api, { getToken, setToken } from '../services/api';
 
-export default function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
-  const token = localStorage.getItem('token');
+type Props = { children: JSX.Element };
+
+export default function PrivateRoute({ children }: Props) {
+  const [status, setStatus] = useState<'checking' | 'allowed' | 'login' | 'pay'>('checking');
+  const location = useLocation();
 
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!token) {
-        setIsLoggedIn(false);
-        setLoading(false);
-        return;
-      }
+    const token = getToken();
 
+    // Sem token → não chama /me
+    if (!token) {
+      setStatus('login');
+      return;
+    }
+
+    let mounted = true;
+    (async () => {
       try {
-        // Busca dados do usuário atual
-        const response = await api.get('/user/me');
-        const user = response.data;
-        
-        setIsLoggedIn(true);
-        
-        // Verifica se é admin OU tem acesso pago
-        const userHasAccess = user.is_admin || user.has_access;
-        setHasAccess(userHasAccess);
-        
-      } catch (error) {
-        console.error('Erro ao verificar acesso:', error);
-        setIsLoggedIn(false);
-        setHasAccess(false);
-      } finally {
-        setLoading(false);
+        const { data } = await api.get('/user/me');
+        localStorage.setItem('me', JSON.stringify(data));
+
+        const userHasAccess = Boolean(data?.is_admin || data?.has_access);
+        if (!mounted) return;
+        setStatus(userHasAccess ? 'allowed' : 'pay');
+      } catch (err: any) {
+        if (err?.response?.status === 401) setToken(null);
+        if (!mounted) return;
+        setStatus('login');
       }
-    };
+    })();
 
-    checkAccess();
-  }, [token]);
+    return () => { mounted = false; };
+  }, [location.pathname]);
 
-  if (loading) {
+  if (status === 'checking') {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        Carregando...
-      </div>
+      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
-  // Se não está logado, vai para login
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+  if (status === 'login') {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // Se está logado mas não tem acesso, vai para página de pagamento
-  if (!hasAccess) {
-    return <Navigate to="/pagamento" replace />;
+  if (status === 'pay') {
+    return <Navigate to="/pagamento" replace state={{ from: location }} />;
   }
 
-  // Se tem acesso, mostra o conteúdo
-  return <>{children}</>;
+  return children;
 }
