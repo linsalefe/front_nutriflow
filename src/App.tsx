@@ -6,12 +6,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import DashboardPage from './pages/DashboardPage';
 import ChatPage from './pages/ChatPage';
-import ListPage from './pages/ListPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ImageAnalysisPage from './pages/ImageAnalysisPage';
-import MealDetailPage from './pages/MealDetailPage';
 import Error404Page from './pages/Error404Page';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -37,9 +35,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/chat" element={<ChatPage />} />
-                    <Route path="/list" element={<ListPage />} />
                     <Route path="/image" element={<ImageAnalysisPage />} />
-                    <Route path="/meal/:id" element={<MealDetailPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="*" element={<Error404Page />} />
                   </Routes>

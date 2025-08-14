@@ -13,12 +13,12 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import ListIcon from '@mui/icons-material/List';
 import ChatIcon from '@mui/icons-material/Chat';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -30,7 +30,6 @@ interface SidebarProps {
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: <DashboardIcon /> },
-  { to: '/list', label: 'Listagem', icon: <ListIcon /> },
   { to: '/chat', label: 'Chat', icon: <ChatIcon /> },
   { to: '/image', label: 'Análise de Imagem', icon: <PhotoCameraIcon /> },
   { to: '/settings', label: 'Configurações', icon: <SettingsIcon /> },
@@ -77,21 +76,45 @@ export default function Sidebar({
               mx: 1,
               mb: 0.5,
               borderRadius: 1.5,
-              color: 'inherit',
-              '&.active, &:hover': { bgcolor: theme.palette.primary.main },
-              ...(pathname === to && { bgcolor: theme.palette.primary.main }),
+              py: 1.5,
+              color: pathname === to ? theme.palette.primary.contrastText : 'rgba(255, 255, 255, 0.7)',
+              bgcolor: pathname === to ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.08)',
+                color: theme.palette.primary.contrastText,
+                transform: 'translateX(4px)',
+              },
+              '&.active': {
+                bgcolor: 'rgba(255, 255, 255, 0.15)',
+                color: theme.palette.primary.contrastText,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+            <ListItemIcon 
+              sx={{ 
+                minWidth: 40, 
+                color: 'inherit',
+                transition: 'transform 0.3s ease',
+              }}
+            >
               {icon}
             </ListItemIcon>
-            <ListItemText primary={label} />
+            <ListItemText 
+              primary={label}
+              primaryTypographyProps={{
+                variant: 'body2',
+                fontWeight: pathname === to ? 600 : 500,
+              }}
+            />
           </ListItemButton>
         ))}
       </List>
 
       <Divider sx={{ bgcolor: theme.palette.primary.light, my: 1 }} />
 
+      {/* Dark Mode Toggle */}
       <ListItemButton
         onClick={() => {
           onToggleMode();
@@ -99,17 +122,31 @@ export default function Sidebar({
         }}
         sx={{
           mx: 1,
+          mb: 0.5,
           borderRadius: 1.5,
-          color: 'inherit',
-          '&:hover': { bgcolor: theme.palette.primary.main },
+          py: 1.5,
+          color: 'rgba(255, 255, 255, 0.7)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            bgcolor: 'rgba(255, 255, 255, 0.08)',
+            color: theme.palette.primary.contrastText,
+            transform: 'translateX(4px)',
+          },
         }}
       >
         <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
           {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
         </ListItemIcon>
-        <ListItemText primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'} />
+        <ListItemText 
+          primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+          primaryTypographyProps={{
+            variant: 'body2',
+            fontWeight: 500,
+          }}
+        />
       </ListItemButton>
 
+      {/* Logout Button */}
       <ListItemButton
         onClick={() => {
           localStorage.removeItem('token');
@@ -117,15 +154,28 @@ export default function Sidebar({
         }}
         sx={{
           mx: 1,
+          mb: 2,
           borderRadius: 1.5,
-          color: 'inherit',
-          '&:hover': { bgcolor: theme.palette.primary.main },
+          py: 1.5,
+          color: 'rgba(255, 255, 255, 0.7)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            bgcolor: 'rgba(244, 67, 54, 0.1)',
+            color: '#ff5722',
+            transform: 'translateX(4px)',
+          },
         }}
       >
         <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-          <SettingsIcon />
+          <LogoutIcon />
         </ListItemIcon>
-        <ListItemText primary="Sair" />
+        <ListItemText 
+          primary="Sair"
+          primaryTypographyProps={{
+            variant: 'body2',
+            fontWeight: 500,
+          }}
+        />
       </ListItemButton>
     </Box>
   );
@@ -141,6 +191,8 @@ export default function Sidebar({
           '& .MuiDrawer-paper': {
             width: 240,
             boxSizing: 'border-box',
+            border: 'none',
+            boxShadow: isMobile ? 'none' : '4px 0 12px rgba(0, 0, 0, 0.08)',
           },
         }}
       >
