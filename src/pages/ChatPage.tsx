@@ -82,7 +82,7 @@ export default function ChatPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Header “online”
+  // Header "online"
   useEffect(() => {
     const onOnline = () => {
       setIsOnline(true);
@@ -128,7 +128,7 @@ export default function ChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [historico, isTyping]);
 
-  // Observa scroll para exibir botão “ir para o fim”
+  // Observa scroll para exibir botão "ir para o fim"
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -484,7 +484,8 @@ export default function ChatPage() {
             px: { xs: 1, sm: 2 },
             py: 2,
             overflowY: 'auto',
-            paddingBottom: { xs: '90px', sm: '20px' },
+            // CORRIGIDO: Aumentei o paddingBottom no mobile de 90px para 140px
+            paddingBottom: { xs: '140px', sm: '20px' },
             position: 'relative',
             '&::-webkit-scrollbar': { width: '8px' },
             '&::-webkit-scrollbar-track': { backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: '4px' },
@@ -790,7 +791,7 @@ export default function ChatPage() {
               }
             >
               <AlertTitle>Falha no envio</AlertTitle>
-              Clique em “Tentar novamente” para reenviar sua última mensagem.
+              Clique em "Tentar novamente" para reenviar sua última mensagem.
             </Alert>
           )}
 
@@ -807,7 +808,7 @@ export default function ChatPage() {
             inputRef={inputRef}
             helperText={
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Shift+Enter: nova linha • “/”: focar campo</span>
+                <span>Shift+Enter: nova linha • "/": focar campo</span>
                 <span>{mensagem.length}/1000</span>
               </Box>
             }
