@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Divider,
   Grid,
   useTheme,
 } from '@mui/material';
@@ -16,7 +15,6 @@ import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import GrainIcon from '@mui/icons-material/Grain';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 interface NutritionalAnalysisProps {
   text: string;
@@ -32,7 +30,6 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
     const foods: string[] = [];
     const nutrients = { calorias: '', proteinas: '', carboidratos: '', gorduras: '' };
     let tip = '';
-    let warning = '';
     
     let currentSection = '';
     
@@ -47,14 +44,13 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
       } else if (line.includes('💡') && line.toLowerCase().includes('dica')) {
         currentSection = 'tip';
         continue;
-      } else if (line.includes('⚠️') && line.toLowerCase().includes('identifiquei')) {
-        currentSection = 'warning';
-        continue;
       }
       
       // Processar conteúdo baseado na seção
       if (currentSection === 'foods' && line.startsWith('-')) {
-        foods.push(line.substring(1).trim());
+        // Remove os ** dos alimentos
+        const cleanFood = line.substring(1).trim().replace(/\*\*/g, '');
+        foods.push(cleanFood);
       } else if (currentSection === 'nutrients') {
         if (line.includes('Calorias') || line.includes('calorias')) {
           const match = line.match(/(\d+)\s*kcal/i);
@@ -71,15 +67,13 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
         }
       } else if (currentSection === 'tip' && !line.includes('💡')) {
         tip += line + ' ';
-      } else if (currentSection === 'warning' && !line.includes('⚠️')) {
-        warning += line + ' ';
       }
     }
     
-    return { foods, nutrients, tip: tip.trim(), warning: warning.trim() };
+    return { foods, nutrients, tip: tip.trim() };
   };
 
-  const { foods, nutrients, tip, warning } = extractInfo(text);
+  const { foods, nutrients, tip } = extractInfo(text);
 
   // Se não conseguiu extrair informações estruturadas, renderiza texto normal
   if (!foods.length && !nutrients.calorias && !tip) {
@@ -117,19 +111,24 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
                 Alimentos Identificados
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {foods.map((food, index) => (
-                <Chip
+                <Box
                   key={index}
-                  label={food}
-                  size="small"
                   sx={{
                     backgroundColor: '#66bb6a',
                     color: 'white',
+                    borderRadius: 2,
+                    px: 2,
+                    py: 1.5,
                     fontWeight: 500,
-                    '& .MuiChip-label': { px: 1.5 }
+                    fontSize: { xs: '0.9rem', sm: '0.875rem' },
+                    lineHeight: 1.4,
+                    boxShadow: '0 2px 4px rgba(102, 187, 106, 0.3)',
                   }}
-                />
+                >
+                  {food}
+                </Box>
               ))}
             </Box>
           </CardContent>
@@ -150,26 +149,26 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
             <Typography variant="h6" sx={{ color: '#f57c00', fontWeight: 600, mb: 2 }}>
               📊 Informações Nutricionais
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={1.5}>
               {nutrients.calorias && (
-                <Grid item xs={6} sm={3}>
+                <Grid item xs={6}>
                   <Box 
                     sx={{ 
                       textAlign: 'center', 
-                      p: 1.5, 
+                      p: { xs: 2, sm: 1.5 }, 
                       borderRadius: 2, 
                       backgroundColor: 'rgba(244, 67, 54, 0.1)',
                       border: '1px solid rgba(244, 67, 54, 0.2)'
                     }}
                   >
-                    <LocalFireDepartmentIcon sx={{ color: '#f44336', fontSize: 28, mb: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                    <LocalFireDepartmentIcon sx={{ color: '#f44336', fontSize: { xs: 32, sm: 28 }, mb: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
                       Calorias
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#f44336', fontWeight: 700 }}>
+                    <Typography variant="h6" sx={{ color: '#f44336', fontWeight: 700, fontSize: { xs: '1.3rem', sm: '1.25rem' } }}>
                       {nutrients.calorias}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.7rem' } }}>
                       kcal
                     </Typography>
                   </Box>
@@ -177,24 +176,24 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
               )}
               
               {nutrients.proteinas && (
-                <Grid item xs={6} sm={3}>
+                <Grid item xs={6}>
                   <Box 
                     sx={{ 
                       textAlign: 'center', 
-                      p: 1.5, 
+                      p: { xs: 2, sm: 1.5 }, 
                       borderRadius: 2, 
                       backgroundColor: 'rgba(63, 81, 181, 0.1)',
                       border: '1px solid rgba(63, 81, 181, 0.2)'
                     }}
                   >
-                    <FitnessCenterIcon sx={{ color: '#3f51b5', fontSize: 28, mb: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                    <FitnessCenterIcon sx={{ color: '#3f51b5', fontSize: { xs: 32, sm: 28 }, mb: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
                       Proteínas
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#3f51b5', fontWeight: 700 }}>
+                    <Typography variant="h6" sx={{ color: '#3f51b5', fontWeight: 700, fontSize: { xs: '1.3rem', sm: '1.25rem' } }}>
                       {nutrients.proteinas}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.7rem' } }}>
                       g
                     </Typography>
                   </Box>
@@ -202,24 +201,24 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
               )}
               
               {nutrients.carboidratos && (
-                <Grid item xs={6} sm={3}>
+                <Grid item xs={6}>
                   <Box 
                     sx={{ 
                       textAlign: 'center', 
-                      p: 1.5, 
+                      p: { xs: 2, sm: 1.5 }, 
                       borderRadius: 2, 
                       backgroundColor: 'rgba(255, 193, 7, 0.1)',
                       border: '1px solid rgba(255, 193, 7, 0.2)'
                     }}
                   >
-                    <GrainIcon sx={{ color: '#ffc107', fontSize: 28, mb: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                    <GrainIcon sx={{ color: '#ffc107', fontSize: { xs: 32, sm: 28 }, mb: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
                       Carboidratos
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#f57c00', fontWeight: 700 }}>
+                    <Typography variant="h6" sx={{ color: '#f57c00', fontWeight: 700, fontSize: { xs: '1.3rem', sm: '1.25rem' } }}>
                       {nutrients.carboidratos}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.7rem' } }}>
                       g
                     </Typography>
                   </Box>
@@ -227,24 +226,24 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
               )}
               
               {nutrients.gorduras && (
-                <Grid item xs={6} sm={3}>
+                <Grid item xs={6}>
                   <Box 
                     sx={{ 
                       textAlign: 'center', 
-                      p: 1.5, 
+                      p: { xs: 2, sm: 1.5 }, 
                       borderRadius: 2, 
                       backgroundColor: 'rgba(156, 39, 176, 0.1)',
                       border: '1px solid rgba(156, 39, 176, 0.2)'
                     }}
                   >
-                    <WaterDropIcon sx={{ color: '#9c27b0', fontSize: 28, mb: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                    <WaterDropIcon sx={{ color: '#9c27b0', fontSize: { xs: 32, sm: 28 }, mb: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
                       Gorduras
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#9c27b0', fontWeight: 700 }}>
+                    <Typography variant="h6" sx={{ color: '#9c27b0', fontWeight: 700, fontSize: { xs: '1.3rem', sm: '1.25rem' } }}>
                       {nutrients.gorduras}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.7rem' } }}>
                       g
                     </Typography>
                   </Box>
@@ -281,30 +280,20 @@ const NutritionalAnalysis: React.FC<NutritionalAnalysisProps> = ({ text }) => {
         </Card>
       )}
 
-      {/* Aviso de Correção */}
-      {warning && (
-        <Card 
-          sx={{ 
-            background: 'linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%)',
-            border: '1px solid rgba(255, 193, 7, 0.3)',
-            boxShadow: '0 2px 8px rgba(255, 193, 7, 0.1)'
-          }}
-        >
-          <CardContent sx={{ pb: '16px !important' }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              <WarningAmberIcon sx={{ color: '#ff9800', mr: 1, mt: 0.5 }} />
-              <Box>
-                <Typography variant="subtitle2" sx={{ color: '#f57c00', fontWeight: 600, mb: 0.5 }}>
-                  Correção de Alimentos
-                </Typography>
-                <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#ef6c00' }}>
-                  {warning || 'Se identifiquei algum alimento errado, me informe para corrigir a análise nutricional.'}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+      {/* Texto de correção como observação */}
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          display: 'block',
+          mt: 2,
+          px: 1,
+          color: 'text.secondary',
+          fontStyle: 'italic',
+          textAlign: 'center'
+        }}
+      >
+        ⚠️ Se identifiquei algum alimento incorretamente, me informe para que eu possa corrigir a análise nutricional.
+      </Typography>
     </Box>
   );
 };
