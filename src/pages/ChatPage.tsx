@@ -1,6 +1,7 @@
 // src/pages/ChatPage.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
+import NutritionalAnalysis from '../components/NutritionalAnalysis';
 import {
   Box,
   Typography,
@@ -55,6 +56,16 @@ const LINA_AVATAR = '/lina-avatar.png';
 // Regex simples para URLs
 const URL_RX = /(https?:\/\/[^\s]+)/i;
 const isUrl = (s: string) => /^https?:\/\/\S+$/i.test(s);
+
+// Função para detectar se é análise nutricional
+const isNutritionalAnalysis = (text: string): boolean => {
+  return (
+    text.includes('🍽️') ||
+    text.includes('📊') ||
+    (text.includes('Calorias') && text.includes('Proteínas')) ||
+    text.includes('Alimentos identificados')
+  );
+};
 
 export default function ChatPage() {
   const [mensagem, setMensagem] = useState('');
@@ -180,18 +191,11 @@ export default function ChatPage() {
         {parts.map((part, idx) => {
           if (isUrl(part)) {
             return (
-              <Link
-                key={idx}
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                underline="hover"
-              >
+              <Link key={idx} href={part} target="_blank" rel="noopener noreferrer" underline="hover">
                 {part}
               </Link>
             );
           }
-          // Para casos "texto(https://...)" ainda pega
           if (URL_RX.test(part) && !isUrl(part)) {
             const subParts = part.split(/(https?:\/\/[^\s]+)/g);
             return (
@@ -222,7 +226,7 @@ export default function ChatPage() {
       type: 'text',
       created_at: new Date().toISOString(),
     };
-    setHistorico(h => [...h, userMsg]);
+    setHistorico((h) => [...h, userMsg]);
     saveMessage(userMsg);
     setLoading(true);
     setIsTyping(true);
@@ -236,7 +240,7 @@ export default function ChatPage() {
         type: 'text',
         created_at: new Date().toISOString(),
       };
-      setHistorico(h => [...h, botMsg]);
+      setHistorico((h) => [...h, botMsg]);
       saveMessage(botMsg);
       setRetryText(null);
     } catch {
@@ -246,7 +250,7 @@ export default function ChatPage() {
         type: 'text',
         created_at: new Date().toISOString(),
       };
-      setHistorico(h => [...h, errMsg]);
+      setHistorico((h) => [...h, errMsg]);
       saveMessage(errMsg);
       setRetryText(text);
     } finally {
@@ -268,9 +272,7 @@ export default function ChatPage() {
   };
 
   // Aceita FormEvent ou KeyboardEvent
-  const enviarMensagem = async (
-    e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLDivElement>
-  ) => {
+  const enviarMensagem = async (e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     const text = mensagem.trim();
     if (!text) return;
@@ -294,7 +296,7 @@ export default function ChatPage() {
       imageUrl: preview,
       created_at: new Date().toISOString(),
     };
-    setHistorico(h => [...h, userMsg]);
+    setHistorico((h) => [...h, userMsg]);
     saveMessage(userMsg);
     setIsTyping(true);
 
@@ -312,7 +314,7 @@ export default function ChatPage() {
         imageUrl: preview,
         created_at: new Date().toISOString(),
       };
-      setHistorico(h => [...h, botMsg]);
+      setHistorico((h) => [...h, botMsg]);
       saveMessage(botMsg);
       setSnackbar({ open: true, message: 'Imagem analisada com sucesso!', severity: 'success' });
     } catch {
@@ -376,7 +378,7 @@ export default function ChatPage() {
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           opacity: 0.5,
           pointerEvents: 'none',
-        }
+        },
       }}
     >
       <Box
@@ -411,14 +413,17 @@ export default function ChatPage() {
             src={LINA_AVATAR}
             alt="Lina"
             sx={{
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)',
               border: '2px solid #fff',
               bgcolor: '#7AA374',
             }}
           />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap>Lina • Assistente Nutricional</Typography>
+            <Typography variant="subtitle2" noWrap>
+              Lina • Assistente Nutricional
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <CircleIcon sx={{ fontSize: 10, color: isOnline ? '#4caf50' : '#f44336' }} />
               <Typography variant="caption" color="text.secondary">
@@ -429,13 +434,7 @@ export default function ChatPage() {
           {retryText && (
             <Tooltip title="Tentar novamente o último envio">
               <span>
-                <Button
-                  size="small"
-                  startIcon={<RestartAltIcon />}
-                  onClick={handleRetry}
-                  disabled={isTyping}
-                  variant="outlined"
-                >
+                <Button size="small" startIcon={<RestartAltIcon />} onClick={handleRetry} disabled={isTyping} variant="outlined">
                   Tentar novamente
                 </Button>
               </span>
@@ -484,7 +483,6 @@ export default function ChatPage() {
             px: { xs: 1, sm: 2 },
             py: 2,
             overflowY: 'auto',
-            // CORRIGIDO: Aumentei o paddingBottom no mobile de 90px para 140px
             paddingBottom: { xs: '140px', sm: '20px' },
             position: 'relative',
             '&::-webkit-scrollbar': { width: '8px' },
@@ -492,7 +490,7 @@ export default function ChatPage() {
             '&::-webkit-scrollbar-thumb': {
               backgroundColor: 'rgba(102, 187, 106, 0.4)',
               borderRadius: '4px',
-              '&:hover': { backgroundColor: 'rgba(102, 187, 106, 0.6)' }
+              '&:hover': { backgroundColor: 'rgba(102, 187, 106, 0.6)' },
             },
           }}
         >
@@ -529,7 +527,7 @@ export default function ChatPage() {
                   type: 'spring',
                   stiffness: 500,
                   damping: 30,
-                  delay: i === historico.length - 1 ? 0.05 : 0
+                  delay: i === historico.length - 1 ? 0.05 : 0,
                 }}
                 style={{
                   display: 'flex',
@@ -561,25 +559,29 @@ export default function ChatPage() {
                     sx={{
                       px: { xs: 2, sm: 2.5 },
                       py: { xs: 1.5, sm: 1.5 },
-                      background: msg.role === 'user'
-                        ? 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)'
-                        : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                      background:
+                        msg.role === 'user'
+                          ? 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)'
+                          : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
                       color: msg.role === 'user' ? 'white' : theme.palette.text.primary,
-                      borderRadius: msg.role === 'user'
-                        ? { xs: '20px 20px 4px 20px', sm: '20px 20px 4px 20px' }
-                        : { xs: '20px 20px 20px 4px', sm: '20px 20px 20px 4px' },
+                      borderRadius:
+                        msg.role === 'user'
+                          ? { xs: '20px 20px 4px 20px', sm: '20px 20px 4px 20px' }
+                          : { xs: '20px 20px 20px 4px', sm: '20px 20px 20px 4px' },
                       position: 'relative',
-                      boxShadow: msg.role === 'user'
-                        ? '0 4px 16px rgba(102, 187, 106, 0.25)'
-                        : '0 2px 12px rgba(0,0,0,0.08)',
+                      boxShadow:
+                        msg.role === 'user'
+                          ? '0 4px 16px rgba(102, 187, 106, 0.25)'
+                          : '0 2px 12px rgba(0,0,0,0.08)',
                       border: msg.role === 'bot' ? '1px solid rgba(0,0,0,0.06)' : 'none',
                       transition: 'all 0.3s ease',
                       '&:hover': {
                         transform: 'translateY(-2px)',
-                        boxShadow: msg.role === 'user'
-                          ? '0 6px 20px rgba(102, 187, 106, 0.35)'
-                          : '0 4px 16px rgba(0,0,0,0.12)',
-                      }
+                        boxShadow:
+                          msg.role === 'user'
+                            ? '0 6px 20px rgba(102, 187, 106, 0.35)'
+                            : '0 4px 16px rgba(0,0,0,0.12)',
+                      },
                     }}
                   >
                     {msg.type === 'image' && msg.imageUrl && (
@@ -604,18 +606,23 @@ export default function ChatPage() {
                       </Box>
                     )}
 
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        whiteSpace: 'pre-wrap',
-                        fontSize: { xs: '0.9rem', sm: '0.95rem' },
-                        lineHeight: 1.6,
-                        wordBreak: 'break-word',
-                        fontWeight: msg.role === 'user' ? 500 : 400,
-                      }}
-                    >
-                      {renderMessageText(msg.text)}
-                    </Typography>
+                    {/* Renderização condicional: NutritionalAnalysis ou texto normal */}
+                    {msg.role === 'bot' && isNutritionalAnalysis(msg.text) ? (
+                      <NutritionalAnalysis text={msg.text} />
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          whiteSpace: 'pre-wrap',
+                          fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                          lineHeight: 1.6,
+                          wordBreak: 'break-word',
+                          fontWeight: msg.role === 'user' ? 500 : 400,
+                        }}
+                      >
+                        {renderMessageText(msg.text)}
+                      </Typography>
+                    )}
 
                     {msg.role === 'bot' && (
                       <IconButton
@@ -631,6 +638,7 @@ export default function ChatPage() {
                           transition: 'opacity 0.2s ease',
                           backgroundColor: 'rgba(0,0,0,0.04)',
                           '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' },
+                          '&:focus, &:active, &:hover': { opacity: 1 },
                         }}
                       >
                         <ContentCopyIcon sx={{ fontSize: 14 }} />
@@ -708,22 +716,23 @@ export default function ChatPage() {
                   gap: 0.5,
                 }}
               >
+                {/* Três bolinhas animadas (corrigido) */}
                 <Box
                   component={motion.div}
                   animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.4, repeat: Infinity }}
+                  transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY }}
                   sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#66bb6a' }}
                 />
                 <Box
                   component={motion.div}
                   animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }}
+                  transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY, delay: 0.2 }}
                   sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#66bb6a' }}
                 />
                 <Box
                   component={motion.div}
                   animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.4 }}
+                  transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY, delay: 0.4 }}
                   sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#66bb6a' }}
                 />
               </Paper>
@@ -799,7 +808,7 @@ export default function ChatPage() {
             fullWidth
             placeholder="Digite sua pergunta sobre nutrição..."
             value={mensagem}
-            onChange={e => setMensagem(e.target.value)}
+            onChange={(e) => setMensagem(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={onPaste}
             multiline
@@ -832,7 +841,7 @@ export default function ChatPage() {
                             transform: 'scale(1.05)',
                             boxShadow: '0 4px 12px rgba(102, 187, 106, 0.4)',
                           },
-                          '&:disabled': { opacity: 0.5 }
+                          '&:disabled': { opacity: 0.5 },
                         }}
                       >
                         <PhotoCameraIcon sx={{ fontSize: 20 }} />
@@ -841,7 +850,7 @@ export default function ChatPage() {
                           type="file"
                           accept="image/*"
                           ref={fileInputRef}
-                          onChange={e => e.target.files && handleFile(e.target.files[0])}
+                          onChange={(e) => e.target.files && handleFile(e.target.files[0])}
                         />
                       </IconButton>
                     </span>
@@ -850,7 +859,7 @@ export default function ChatPage() {
               ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <Tooltip title={(!mensagem.trim() || imgLoading || isTyping) ? '' : 'Enviar'}>
+                  <Tooltip title={!mensagem.trim() || imgLoading || isTyping ? '' : 'Enviar'}>
                     <span>
                       <IconButton
                         type="submit"
@@ -859,9 +868,10 @@ export default function ChatPage() {
                           width: 40,
                           height: 40,
                           ml: 0.5,
-                          background: !mensagem.trim() || imgLoading || isTyping
-                            ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
-                            : 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)',
+                          background:
+                            !mensagem.trim() || imgLoading || isTyping
+                              ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
+                              : 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)',
                           color: 'white',
                           transition: 'all 0.3s ease',
                           '&:hover:not(:disabled)': {
@@ -870,11 +880,7 @@ export default function ChatPage() {
                           },
                         }}
                       >
-                        {imgLoading || isTyping ? (
-                          <CircularProgress size={18} sx={{ color: 'white' }} />
-                        ) : (
-                          <SendIcon sx={{ fontSize: 20 }} />
-                        )}
+                        {imgLoading || isTyping ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <SendIcon sx={{ fontSize: 20 }} />}
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -887,7 +893,7 @@ export default function ChatPage() {
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.1)' },
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(102, 187, 106, 0.3)' },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#66bb6a', borderWidth: 2 },
-                '&.Mui-disabled': { backgroundColor: 'rgba(245, 245, 245, 0.9)' }
+                '&.Mui-disabled': { backgroundColor: 'rgba(245, 245, 245, 0.9)' },
               },
             }}
             sx={{
@@ -899,14 +905,11 @@ export default function ChatPage() {
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
-          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           sx={{ bottom: { xs: 'calc(100px + env(safe-area-inset-bottom))', sm: '32px' } }}
         >
-          <Alert
-            severity={snackbar.severity}
-            sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-          >
+          <Alert severity={snackbar.severity} sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
             {snackbar.message}
           </Alert>
         </Snackbar>
