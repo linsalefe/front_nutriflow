@@ -3,12 +3,13 @@ import React from 'react';
 import {
   Card,
   CardContent,
-  Typography,
+  CardHeader,
+  ToggleButtonGroup,
+  ToggleButton,
   Box,
+  Typography,
   useTheme,
   useMediaQuery,
-  ButtonGroup,
-  Button,
 } from '@mui/material';
 import {
   ResponsiveContainer,
@@ -16,126 +17,85 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
+  CartesianGrid,
 } from 'recharts';
 
-interface LogItem {
-  date: string;   // ISO (UTC)
-  weight: number;
-}
+type Point = { date: string; weight: number };
 
-interface ChartCardProps {
-  data: LogItem[];
-  activePeriod: string;
+interface Props {
+  data: Point[];
+  activePeriod: string; // ex.: '7d' | '30d' | '90d' | '1y'
   onChangePeriod: (p: string) => void;
 }
 
-const periods = [
-  { key: '7d', label: '7 dias' },
-  { key: '30d', label: '30 dias' },
-  { key: '1y', label: '1 ano' },
-];
-
-const formatDateBR = (value: string | number | Date) => {
-  const d = new Date(value);
+function formatDateLabel(iso: string) {
+  const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d);
-};
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
+}
 
-export default function ChartCard({
-  data,
-  activePeriod,
-  onChangePeriod,
-}: ChartCardProps) {
+export default function ChartCard({ data, activePeriod, onChangePeriod }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const chartHeight = isMobile ? 200 : 260;
+
+  // ⚠️ IMPORTANTE: nenhum useEffect/useMemo dispara setState aqui.
+  // Apenas renderização pura. Mudança de período só por interação do usuário.
 
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-      <CardContent>
-        <Typography variant={isMobile ? 'subtitle1' : 'h6'} gutterBottom>
-          Evolução de Peso
-        </Typography>
+    <Card sx={{ height: isMobile ? 360 : 420, display: 'flex', flexDirection: 'column' }}>
+      <CardHeader
+        title="Evolução do Peso"
+        action={
+          <ToggleButtonGroup
+            size="small"
+            color="primary"
+            value={activePeriod}
+            exclusive
+            onChange={(_, v) => v && onChangePeriod(v)}
+          >
+            <ToggleButton value="7d">7d</ToggleButton>
+            <ToggleButton value="30d">30d</ToggleButton>
+            <ToggleButton value="90d">90d</ToggleButton>
+            <ToggleButton value="1y">1y</ToggleButton>
+          </ToggleButtonGroup>
+        }
+      />
 
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            mb: 2,
-            overflowX: 'auto',
-          }}
-        >
-          <ButtonGroup size="small" variant="outlined">
-            {periods.map((p) => (
-              <Button
-                key={p.key}
-                onClick={() => onChangePeriod(p.key)}
-                variant={activePeriod === p.key ? 'contained' : 'outlined'}
-              >
-                {p.label}
-              </Button>
-            ))}
-          </ButtonGroup>
-        </Box>
-
-        <Box sx={{ height: chartHeight }}>
-          {data.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={data}
-                margin={{ top: 8, right: 16, left: 0, bottom: 12 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                  tickFormatter={formatDateBR}
-                  minTickGap={isMobile ? 30 : 16}
-                />
-                <YAxis
-                  domain={['dataMin', 'dataMax']}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <Tooltip
-                  labelFormatter={formatDateBR}
-                  formatter={(value: any) => [`${value}`, 'peso (kg)']}
-                  wrapperStyle={{ fontSize: isMobile ? 12 : 14 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="weight"
-                  stroke={theme.palette.primary.main}
-                  strokeWidth={3}
-                  dot={{ r: isMobile ? 2 : 4 }}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <Box
-              sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'text.secondary',
-                p: 2,
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="body2">
-                Poucos dados para exibir o gráfico.
-              </Typography>
-            </Box>
-          )}
-        </Box>
+      <CardContent sx={{ flex: 1, minHeight: 240 }}>
+        {Array.isArray(data) && data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDateLabel}
+                interval="preserveStartEnd"
+                minTickGap={16}
+              />
+              <YAxis
+                dataKey="weight"
+                width={isMobile ? 28 : 36}
+                tickMargin={8}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip
+                labelFormatter={(v) => {
+                  const d = new Date(v);
+                  return isNaN(d.getTime()) ? '' : d.toLocaleString('pt-BR');
+                }}
+                formatter={(value) => [`${value} kg`, 'Peso']}
+              />
+              <Line type="monotone" dataKey="weight" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <Box sx={{ height: 240, display: 'grid', placeItems: 'center' }}>
+            <Typography color="text.secondary">Sem dados para o período.</Typography>
+          </Box>
+        )}
       </CardContent>
     </Card>
   );
