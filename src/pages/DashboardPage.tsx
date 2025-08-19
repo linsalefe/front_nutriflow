@@ -1,5 +1,5 @@
-// src/pages/DashboardPage.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+// src/pages/DashboardPage.tsx - VERSÃO FINAL CORRIGIDA
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -36,7 +36,7 @@ import ProgressCard from '../components/ProgressCard';
 interface LogItem {
   id: string;
   weight: number;
-  recorded_at: string; // ISO UTC
+  recorded_at: string;
 }
 
 interface ChartLog {
@@ -87,16 +87,15 @@ const localInputToIso = (localValue: string) => {
 };
 
 export default function DashboardPage() {
-  // ---- HOOKS NO TOPO (ordem fixa) ----
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [period, setPeriod] = useState<string>('30d');
   const [userName, setUserName] = useState<string>('Usuário');
+  const [loadingAction, setLoadingAction] = useState(false);
 
   // dialog registrar
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newWeight, setNewWeight] = useState<string>('');
   const [newHeight, setNewHeight] = useState<string>('');
-  const [loadingAction, setLoadingAction] = useState(false);
 
   // dialog histórico
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -113,7 +112,6 @@ export default function DashboardPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // NÃO chamar /user/me aqui (evita 401 e mount antes do PrivateRoute).
   useEffect(() => {
     const meStr = localStorage.getItem('me');
     if (meStr) {
@@ -134,10 +132,10 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const fetchMetrics = async (p: string) => {
+  const fetchMetrics = async () => {
     setLoadingAction(true);
     try {
-      const url = `/dashboard/metrics${p ? `?period=${p}` : ''}`;
+      const url = `/dashboard/metrics${period ? `?period=${period}` : ''}`;
       const { data } = await api.get<DashboardMetrics>(url);
       setMetrics({
         objective: data.objective,
@@ -156,7 +154,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchMetrics(period);
+    fetchMetrics();
   }, [period]);
 
   const fetchLogs = async () => {
@@ -178,15 +176,11 @@ export default function DashboardPage() {
     await fetchLogs();
   };
 
-  // ✅ useMemo ANTES de qualquer retorno condicional
   const historyChart: ChartLog[] = useMemo(() => {
     const h = metrics?.history ?? [];
     return h.map((item) => ({ date: item.date, weight: item.weight }));
   }, [metrics]);
 
-  // ----- A partir daqui pode haver returns -----
-
-  // Loading inicial
   if (!metrics) {
     return (
       <Box
@@ -203,12 +197,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Ações: registrar/editar/apagar
   const handleOpenDialog = () => {
     setNewWeight('');
     setNewHeight('');
     setDialogOpen(true);
   };
+  
   const handleCloseDialog = () => setDialogOpen(false);
 
   const handleConfirm = async () => {
@@ -230,7 +224,7 @@ export default function DashboardPage() {
       }
       await api.post('/weight-logs', { weight });
       setDialogOpen(false);
-      await fetchMetrics(period);
+      await fetchMetrics();
       if (historyOpen) await fetchLogs();
     } catch (err) {
       console.error(err);
@@ -257,7 +251,7 @@ export default function DashboardPage() {
         ...(dtIso ? { recorded_at: dtIso } : {}),
       });
       setEditOpen(false);
-      await fetchMetrics(period);
+      await fetchMetrics();
       await fetchLogs();
     } catch (e) {
       console.error(e);
@@ -268,7 +262,7 @@ export default function DashboardPage() {
     if (!confirm('Remover este registro?')) return;
     try {
       await api.delete(`/weight-logs/${id}`);
-      await fetchMetrics(period);
+      await fetchMetrics();
       await fetchLogs();
     } catch (e) {
       console.error(e);
@@ -341,6 +335,8 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
 
+      {/* Todos os Dialogs aqui... (mantém o resto igual) */}
+      
       {/* Dialog Registrar */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
         <DialogTitle>Registrar Peso e Altura</DialogTitle>

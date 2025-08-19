@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { getTheme } from './theme/theme';
+import React from 'react';
 import MainLayout from './layouts/MainLayout';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useThemeMode } from './contexts/ThemeModeContext';
 
 import DashboardPage from './pages/DashboardPage';
 import ChatPage from './pages/ChatPage';
@@ -14,38 +13,34 @@ import Error404Page from './pages/Error404Page';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
-  const [mode, setMode] = useState<'light' | 'dark'>('light');
-  const theme = useMemo(() => getTheme(mode), [mode]);
+  const { mode, toggleMode } = useThemeMode();
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route
-            path="*"
-            element={
-              <PrivateRoute>
-                <MainLayout
-                  mode={mode}
-                  onToggleMode={() => setMode(prev => (prev === 'light' ? 'dark' : 'light'))}
-                >
-                  <Routes>
-                    <Route path="/" element={<DashboardPage />} />
-                    <Route path="/chat" element={<ChatPage />} />
-                    <Route path="/image" element={<ImageAnalysisPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="*" element={<Error404Page />} />
-                  </Routes>
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route
+          path="*"
+          element={
+            <PrivateRoute>
+              <MainLayout
+                mode={mode as 'light' | 'dark'}
+                onToggleMode={toggleMode}
+              >
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/chat" element={<ChatPage />} />
+                  <Route path="/image" element={<ImageAnalysisPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Error404Page />} />
+                </Routes>
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 
