@@ -9,8 +9,8 @@ export default function PrivateRoute({ children }: Props) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Verificação simples de token
-    const token = localStorage.getItem('token');
+    // Verificação usando a mesma chave do api.ts
+    const token = localStorage.getItem('nutriflow_token');
     setIsAuthenticated(!!token);
   }, []);
 
