@@ -1,9 +1,8 @@
 import React from 'react';
 import MainLayout from './layouts/MainLayout';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useThemeMode } from './contexts/ThemeModeContext';
 
-import DashboardPage from './pages/DashboardPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
@@ -29,7 +28,7 @@ function App() {
                 onToggleMode={toggleMode}
               >
                 <Routes>
-                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/" element={<Navigate to="/chat" replace />} />
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/image" element={<ImageAnalysisPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
