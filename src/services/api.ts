@@ -1,22 +1,28 @@
 // src/services/api.ts
 import axios, { AxiosError, AxiosHeaders } from 'axios';
 
-/** ========= Base URL (dev/prod) =========
- * - Em dev local usa http://127.0.0.1:8000/api
- * - Em produção usa o mesmo domínio via /api (Nginx proxy)
- * - Se VITE_API_URL existir, tem prioridade
+/** ========= Base URL inteligente =========
+ * - Se VITE_API_URL existir, tem prioridade.
+ * - Em dev (localhost/127.0.0.1) → http://127.0.0.1:8000/api
+ * - Em produção (portal.nutriflow.cloud) → https://nutriflow-api.duckdns.org/api
  */
 const ENV_URL = (import.meta as any).env?.VITE_API_URL as string | undefined;
 
 function computeBaseURL() {
   if (ENV_URL && ENV_URL.trim()) return ENV_URL.replace(/\/+$/, '');
+
   if (typeof window !== 'undefined') {
     const { hostname } = window.location;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://127.0.0.1:8000/api';
     }
+    if (hostname.includes('portal.nutriflow.cloud')) {
+      return 'https://nutriflow-api.duckdns.org/api';
+    }
   }
-  return '/api';
+
+  // fallback
+  return 'https://nutriflow-api.duckdns.org/api';
 }
 
 export const baseURL = computeBaseURL();
@@ -26,17 +32,13 @@ const api = axios.create({
   timeout: 60000,
   maxBodyLength: 10 * 1024 * 1024,
   maxContentLength: 10 * 1024 * 1024,
-  headers: { Accept: 'application/json' }, // não fixa Content-Type p/ permitir uploads
+  headers: { Accept: 'application/json' },
 });
 
-// 🔄 Warm-up seguro (não depende de baseURL absoluta)
+// ========= Warm-up =========
 (() => {
   try {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    if (origin) {
-      fetch(`${origin}/api/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
-      fetch(`${origin}/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
-    }
+    fetch(`${baseURL}/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
   } catch {}
 })();
 
@@ -91,7 +93,7 @@ api.interceptors.response.use(
   }
 );
 
-/** ========= Login JSON (sempre POST) ========= */
+/** ========= Login JSON ========= */
 export async function loginJson(username: string, password: string) {
   const { data } = await api.post('/user/login', { username, password });
   const token =
