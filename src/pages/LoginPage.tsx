@@ -11,7 +11,7 @@ import {
   Avatar,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -27,7 +27,7 @@ export default function LoginPage() {
   }>({ open: false, message: '', severity: 'success' });
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!username || !password) {
       setSnackbar({ open: true, message: 'Preencha usuário e senha.', severity: 'error' });
@@ -35,22 +35,22 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      // login em JSON + salva token no axios/localStorage
+      // 🔐 Login via JSON (POST /user/login)
       await loginJson(username.trim(), password);
 
-      // validação do token chamando /me
+      // valida token com /me
       const { data: me } = await api.get('/user/me');
       localStorage.setItem('me', JSON.stringify(me));
 
       setSnackbar({ open: true, message: 'Login realizado com sucesso!', severity: 'success' });
-      setTimeout(() => navigate('/'), 1000);
+      setTimeout(() => navigate('/dashboard', { replace: true }), 600);
     } catch (error: any) {
-      const msg = error?.response?.data?.detail || 'Erro ao fazer login';
-      setSnackbar({ open: true, message: msg, severity: 'error' });
+      const msg = error?.response?.data?.detail || error?.message || 'Erro ao fazer login';
+      setSnackbar({ open: true, message: String(msg), severity: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <Box
@@ -60,7 +60,7 @@ export default function LoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         bgcolor: 'background.default',
-        p: 2
+        p: 2,
       }}
     >
       <Card sx={{ width: '100%', maxWidth: 420, p: 4, borderRadius: 3, boxShadow: 6 }}>
@@ -82,6 +82,7 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoFocus
+              autoComplete="username"
             />
             <TextField
               required
@@ -90,6 +91,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
             />
             <Button
               type="submit"
@@ -105,11 +107,7 @@ export default function LoginPage() {
           <Box textAlign="center" mt={2}>
             <Typography variant="body2">
               Ainda não tem conta?{' '}
-              <Button
-                component="a"
-                href="/signup"
-                sx={{ textTransform: 'none', p: 0, minWidth: 0 }}
-              >
+              <Button component="a" href="/signup" sx={{ textTransform: 'none', p: 0, minWidth: 0 }}>
                 Cadastre-se
               </Button>
             </Typography>
