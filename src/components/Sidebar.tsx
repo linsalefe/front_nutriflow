@@ -12,14 +12,13 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import ChatIcon from '@mui/icons-material/Chat';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   mode: 'light' | 'dark';
@@ -29,7 +28,6 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: <DashboardIcon /> },
   { to: '/chat', label: 'Chat', icon: <ChatIcon /> },
   { to: '/image', label: 'Análise de Imagem', icon: <PhotoCameraIcon /> },
   { to: '/settings', label: 'Configurações', icon: <SettingsIcon /> },
@@ -44,6 +42,17 @@ export default function Sidebar({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    const KEYS = ['nutriflow_token', 'token', 'access_token', 'auth_token', 'me'];
+    KEYS.forEach(k => localStorage.removeItem(k));
+    if (isMobile) onMobileClose();
+    // Garantir saída das rotas privadas
+    navigate('/login', { replace: true });
+    // fallback para evitar cache de histórico
+    setTimeout(() => window.location.replace('/login'), 0);
+  };
 
   const drawerContent = (
     <Box
@@ -148,10 +157,7 @@ export default function Sidebar({
 
       {/* Logout Button */}
       <ListItemButton
-        onClick={() => {
-          localStorage.removeItem('token');
-          window.location.reload();
-        }}
+        onClick={handleLogout}
         sx={{
           mx: 1,
           mb: 2,

@@ -32,7 +32,8 @@ function App() {
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/image" element={<ImageAnalysisPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="*" element={<Error404Page />} />
+                  <Route path="/404" element={<Error404Page />} />
+                  <Route path="*" element={<Navigate to="/404" replace />} />
                 </Routes>
               </MainLayout>
             </PrivateRoute>

@@ -16,7 +16,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 interface HeaderProps {
   mode: 'light' | 'dark';
   onToggleMode: () => void;
-  onMenuClick?: () => void; // opcional, para mobile
+  onMenuClick?: () => void;
 }
 
 export default function Header({
@@ -27,6 +27,13 @@ export default function Header({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const handleLogout = () => {
+    const KEYS = ['nutriflow_token', 'token', 'access_token', 'auth_token', 'me'];
+    KEYS.forEach(k => localStorage.removeItem(k));
+    // impede voltar para rota privada
+    window.location.replace('/login');
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -35,7 +42,7 @@ export default function Header({
       sx={{
         borderBottom: `1px solid ${theme.palette.divider}`,
         backgroundColor: theme.palette.background.paper,
-        zIndex: theme.zIndex.drawer + 1, // fica acima do Drawer
+        zIndex: theme.zIndex.drawer + 1,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -62,13 +69,7 @@ export default function Header({
           <IconButton onClick={onToggleMode} color="inherit">
             {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
           </IconButton>
-          <IconButton
-            onClick={() => {
-              localStorage.removeItem('token');
-              window.location.reload();
-            }}
-            color="inherit"
-          >
+          <IconButton onClick={handleLogout} color="inherit" aria-label="Sair">
             <ExitToAppIcon />
           </IconButton>
         </Box>
