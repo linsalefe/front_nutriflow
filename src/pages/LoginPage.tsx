@@ -43,7 +43,7 @@ export default function LoginPage() {
       localStorage.setItem('me', JSON.stringify(me));
 
       setSnackbar({ open: true, message: 'Login realizado com sucesso!', severity: 'success' });
-      setTimeout(() => navigate('/dashboard', { replace: true }), 600);
+      setTimeout(() => navigate('/chat', { replace: true }), 600);
     } catch (error: any) {
       const msg = error?.response?.data?.detail || error?.message || 'Erro ao fazer login';
       setSnackbar({ open: true, message: String(msg), severity: 'error' });
