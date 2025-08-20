@@ -30,7 +30,6 @@ export default function Header({
   const handleLogout = () => {
     const KEYS = ['nutriflow_token', 'token', 'access_token', 'auth_token', 'me'];
     KEYS.forEach(k => localStorage.removeItem(k));
-    // impede voltar para rota privada
     window.location.replace('/login');
   };
 
@@ -46,27 +45,37 @@ export default function Header({
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           {isMobile && onMenuClick && (
             <IconButton
               edge="start"
               onClick={onMenuClick}
-              sx={{ mr: 1, color: theme.palette.text.primary }}
+              sx={{ mr: 0.5, color: theme.palette.text.primary }}
             >
               <MenuIcon />
             </IconButton>
           )}
-          <Typography
-            variant={isMobile ? 'subtitle1' : 'h6'}
-            noWrap
-            sx={{ color: theme.palette.text.primary }}
-          >
-            NutriFlow
-          </Typography>
+
+          {/* Logo + Nome */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              component="img"
+              src="/logoNF.svg"
+              alt="NutriFlow"
+              sx={{ width: isMobile ? 24 : 28, height: 'auto', display: 'block' }}
+            />
+            <Typography
+              variant={isMobile ? 'subtitle1' : 'h6'}
+              noWrap
+              sx={{ color: theme.palette.text.primary, fontWeight: 600 }}
+            >
+              NutriFlow
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
-          <IconButton onClick={onToggleMode} color="inherit">
+          <IconButton onClick={onToggleMode} color="inherit" aria-label="Alternar tema">
             {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
           </IconButton>
           <IconButton onClick={handleLogout} color="inherit" aria-label="Sair">

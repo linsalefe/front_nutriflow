@@ -9,12 +9,13 @@ import {
   ListItemText,
   Divider,
   Typography,
-  useTheme,
   useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
+import HistoryIcon from '@mui/icons-material/History';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -27,11 +28,7 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-const navItems = [
-  { to: '/chat', label: 'Chat', icon: <ChatIcon /> },
-  { to: '/image', label: 'Análise de Imagem', icon: <PhotoCameraIcon /> },
-  { to: '/settings', label: 'Configurações', icon: <SettingsIcon /> },
-];
+const DRAWER_WIDTH = 240;
 
 export default function Sidebar({
   mode,
@@ -44,150 +41,111 @@ export default function Sidebar({
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
+  const ItemLink = ({
+    to,
+    label,
+    icon,
+    onClick,
+  }: {
+    to: string;
+    label: string;
+    icon: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <NavLink
+      to={to}
+      style={{ textDecoration: 'none', color: 'inherit' }}
+      onClick={() => {
+        onClick?.();
+        if (isMobile) onMobileClose();
+      }}
+    >
+      {({ isActive }) => (
+        <ListItemButton
+          selected={isActive}
+          sx={{
+            mx: 1,
+            mb: 0.5,
+            borderRadius: 1.5,
+            py: 1.25,
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>{icon}</ListItemIcon>
+          <ListItemText
+            primary={label}
+            primaryTypographyProps={{ variant: 'body2', fontWeight: isActive ? 600 : 500 }}
+          />
+        </ListItemButton>
+      )}
+    </NavLink>
+  );
+
   const handleLogout = () => {
-    const KEYS = ['nutriflow_token', 'token', 'access_token', 'auth_token', 'me'];
-    KEYS.forEach(k => localStorage.removeItem(k));
+    ['nutriflow_token', 'token', 'access_token', 'auth_token', 'me'].forEach((k) =>
+      localStorage.removeItem(k),
+    );
     if (isMobile) onMobileClose();
-    // Garantir saída das rotas privadas
     navigate('/login', { replace: true });
-    // fallback para evitar cache de histórico
+    // fallback contra histórico do navegador
     setTimeout(() => window.location.replace('/login'), 0);
   };
 
   const drawerContent = (
-    <Box
-      sx={{
-        width: 240,
-        height: '100%',
-        bgcolor: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
-        display: 'flex',
-        flexDirection: 'column',
-        pt: 2,
-      }}
-    >
-      <Box sx={{ px: 2, mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ px: 2, py: 2 }}>
+        <Typography variant="h6" fontWeight={700}>
           NutriFlow
         </Typography>
       </Box>
 
-      <Divider sx={{ bgcolor: theme.palette.primary.light }} />
+      <Divider />
 
-      <List sx={{ flexGrow: 1, mt: 1 }}>
-        {navItems.map(({ to, label, icon }) => (
-          <ListItemButton
-            key={to}
-            component={NavLink}
-            to={to}
-            onClick={isMobile ? onMobileClose : undefined}
-            sx={{
-              mx: 1,
-              mb: 0.5,
-              borderRadius: 1.5,
-              py: 1.5,
-              color: pathname === to ? theme.palette.primary.contrastText : 'rgba(255, 255, 255, 0.7)',
-              bgcolor: pathname === to ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.08)',
-                color: theme.palette.primary.contrastText,
-                transform: 'translateX(4px)',
-              },
-              '&.active': {
-                bgcolor: 'rgba(255, 255, 255, 0.15)',
-                color: theme.palette.primary.contrastText,
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              },
-            }}
-          >
-            <ListItemIcon 
-              sx={{ 
-                minWidth: 40, 
-                color: 'inherit',
-                transition: 'transform 0.3s ease',
-              }}
-            >
-              {icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={label}
-              primaryTypographyProps={{
-                variant: 'body2',
-                fontWeight: pathname === to ? 600 : 500,
-              }}
-            />
-          </ListItemButton>
-        ))}
+      <List sx={{ flex: 1, mt: 1 }}>
+        <ItemLink to="/chat" label="Chat" icon={<ChatIcon />} />
+        {isMobile && pathname.startsWith('/chat') && (
+          <ItemLink to="/chat?history=1" label="Conversas" icon={<HistoryIcon />} />
+        )}
+        <ItemLink to="/image" label="Análise de Imagem" icon={<PhotoCameraIcon />} />
+        <ItemLink to="/settings" label="Configurações" icon={<SettingsIcon />} />
       </List>
 
-      <Divider sx={{ bgcolor: theme.palette.primary.light, my: 1 }} />
+      <Divider />
 
-      {/* Dark Mode Toggle */}
-      <ListItemButton
-        onClick={() => {
-          onToggleMode();
-          if (isMobile) onMobileClose();
-        }}
-        sx={{
-          mx: 1,
-          mb: 0.5,
-          borderRadius: 1.5,
-          py: 1.5,
-          color: 'rgba(255, 255, 255, 0.7)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            bgcolor: 'rgba(255, 255, 255, 0.08)',
-            color: theme.palette.primary.contrastText,
-            transform: 'translateX(4px)',
-          },
-        }}
-      >
-        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-          {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-        </ListItemIcon>
-        <ListItemText 
-          primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'}
-          primaryTypographyProps={{
-            variant: 'body2',
-            fontWeight: 500,
+      <List>
+        <ListItemButton
+          onClick={() => {
+            onToggleMode();
+            if (isMobile) onMobileClose();
           }}
-        />
-      </ListItemButton>
+          sx={{ mx: 1, mb: 0.5, borderRadius: 1.5, py: 1.25 }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+          </ListItemIcon>
+          <ListItemText
+            primary={mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+            primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+          />
+        </ListItemButton>
 
-      {/* Logout Button */}
-      <ListItemButton
-        onClick={handleLogout}
-        sx={{
-          mx: 1,
-          mb: 2,
-          borderRadius: 1.5,
-          py: 1.5,
-          color: 'rgba(255, 255, 255, 0.7)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            bgcolor: 'rgba(244, 67, 54, 0.1)',
-            color: '#ff5722',
-            transform: 'translateX(4px)',
-          },
-        }}
-      >
-        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-          <LogoutIcon />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Sair"
-          primaryTypographyProps={{
-            variant: 'body2',
-            fontWeight: 500,
-          }}
-        />
-      </ListItemButton>
+        <ListItemButton
+          onClick={handleLogout}
+          sx={{ mx: 1, mb: 2, borderRadius: 1.5, py: 1.25 }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Sair"
+            primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+          />
+        </ListItemButton>
+      </List>
     </Box>
   );
 
   return (
-    <Box component="nav">
+    <Box component="nav" sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}>
       <Drawer
         variant={isMobile ? 'temporary' : 'permanent'}
         open={isMobile ? mobileOpen : true}
@@ -195,10 +153,10 @@ export default function Sidebar({
         ModalProps={{ keepMounted: true }}
         sx={{
           '& .MuiDrawer-paper': {
-            width: 240,
+            width: DRAWER_WIDTH,
             boxSizing: 'border-box',
             border: 'none',
-            boxShadow: isMobile ? 'none' : '4px 0 12px rgba(0, 0, 0, 0.08)',
+            boxShadow: isMobile ? 'none' : '4px 0 12px rgba(0,0,0,0.08)',
           },
         }}
       >

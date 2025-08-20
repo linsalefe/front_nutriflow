@@ -1,4 +1,3 @@
-// src/layouts/MainLayout.tsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -10,40 +9,32 @@ import {
 } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLoading } from '../contexts/LoadingContext';
-import { useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 
+type Mode = 'light' | 'dark';
+
 interface MainLayoutProps {
-  children: React.ReactNode;
-  mode: 'light' | 'dark';
+  mode: Mode;
   onToggleMode: () => void;
 }
 
-export default function MainLayout({
-  children,
-  mode,
-  onToggleMode,
-}: MainLayoutProps) {
+export default function MainLayout({ mode, onToggleMode }: MainLayoutProps) {
   const { loading } = useLoading();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
   const location = useLocation();
+
+  const handleDrawerToggle = () => setMobileOpen(v => !v);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f7fe' }}>
       <CssBaseline />
 
-      {/* Header com botão de menu no mobile */}
-      <Header
-        mode={mode}
-        onToggleMode={onToggleMode}
-        onMenuClick={handleDrawerToggle}
-      />
+      <Header mode={mode} onToggleMode={onToggleMode} onMenuClick={handleDrawerToggle} />
 
-      {/* Sidebar controlado por main */}
       <Sidebar
         mode={mode}
         onToggleMode={onToggleMode}
@@ -52,10 +43,8 @@ export default function MainLayout({
       />
 
       <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Espaço para o AppBar */}
         <Toolbar sx={{ minHeight: 64 }} />
 
-        {/* Barra de loading */}
         {loading && (
           <LinearProgress
             sx={{
@@ -68,7 +57,6 @@ export default function MainLayout({
           />
         )}
 
-        {/* Conteúdo com animação de transição */}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -79,7 +67,7 @@ export default function MainLayout({
             style={{ flex: 1, overflowY: 'auto' }}
           >
             <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-              {children}
+              <Outlet />
             </Box>
           </motion.div>
         </AnimatePresence>
