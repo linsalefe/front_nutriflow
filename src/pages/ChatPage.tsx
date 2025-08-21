@@ -42,6 +42,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLoading } from '../contexts/LoadingContext';
 import { useSearchParams } from 'react-router-dom';
 
+// 👉 novo: componente de cards da análise
+import NutritionalAnalysis from '../components/NutritionalAnalysis';
+
 interface Mensagem {
   role: 'user' | 'bot';
   text: string;
@@ -115,8 +118,7 @@ export default function ChatPage() {
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [retryText, setRetryText] = useState<string | null>(null);
 
-  // histórico
-  const [historyOpenDesktop, setHistoryOpenDesktop] = useState<boolean>(false); // desktop começa fechado
+  const [historyOpenDesktop, setHistoryOpenDesktop] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParamOpen = searchParams.get('history') === '1';
   const [historyOpenMobile, setHistoryOpenMobile] = useState<boolean>(historyParamOpen);
@@ -135,7 +137,6 @@ export default function ChatPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // medir altura do input
   const measureInput = useCallback(() => {
     const h = inputWrapRef.current?.offsetHeight || 96;
     setInputHeight(h);
@@ -145,11 +146,8 @@ export default function ChatPage() {
     window.addEventListener('resize', measureInput);
     return () => window.removeEventListener('resize', measureInput);
   }, [measureInput]);
-  useEffect(() => {
-    measureInput();
-  }, [mensagem, isTyping, imgLoading, measureInput]);
+  useEffect(() => { measureInput(); }, [mensagem, isTyping, imgLoading, measureInput]);
 
-  // sincroniza param -> state
   useEffect(() => { setHistoryOpenMobile(historyParamOpen); }, [historyParamOpen]);
 
   const openMobileHistory = () => {
@@ -163,7 +161,6 @@ export default function ChatPage() {
     setSearchParams(sp, { replace: true });
   };
 
-  // online/offline
   useEffect(() => {
     const onOnline = () => { setIsOnline(true); setSnackbar({ open: true, message: 'Conexão restabelecida.', severity: 'success' }); };
     const onOffline = () => { setIsOnline(false); setSnackbar({ open: true, message: 'Sem conexão com a internet.', severity: 'error' }); };
@@ -172,7 +169,6 @@ export default function ChatPage() {
     return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); };
   }, []);
 
-  // carrega histórico + perfil
   useEffect(() => {
     (async () => {
       try {
@@ -184,17 +180,14 @@ export default function ChatPage() {
         let base: Mensagem[];
         const serverHist = (hist?.history || []) as Mensagem[];
 
-        if (serverHist.length) {
-          base = dedupeStrict(serverHist);
-        } else {
-          const welcome: Mensagem = {
+        if (serverHist.length) base = dedupeStrict(serverHist);
+        else {
+          base = [{
             role: 'bot',
-            text:
-              'Olá! Eu sou a Lina, sua assistente nutricional 😊\n\nComo posso ajudar você hoje? Você pode me perguntar sobre calorias, proteínas, dietas ou enviar fotos de alimentos!',
+            text: 'Olá! Eu sou a Lina, sua assistente nutricional 😊\n\nComo posso ajudar você hoje? Você pode me perguntar sobre calorias, proteínas, dietas ou enviar fotos de alimentos!',
             type: 'text',
             created_at: new Date().toISOString(),
-          };
-          base = [welcome];
+          }];
         }
 
         setHistorico(base);
@@ -202,25 +195,20 @@ export default function ChatPage() {
         const last = base[base.length - 1];
         setSelectedDayKey(dayKey(last?.created_at || new Date()));
       } catch {
-        const fallback: Mensagem[] = [
-          {
-            role: 'bot',
-            text:
-              'Olá! Eu sou a Lina, sua assistente nutricional 😊\n\nComo posso ajudar você hoje? Você pode me perguntar sobre calorias, proteínas, dietas ou enviar fotos de alimentos!',
-            type: 'text',
-            created_at: new Date().toISOString(),
-          },
-        ];
+        const fallback: Mensagem[] = [{
+          role: 'bot',
+          text: 'Olá! Eu sou a Lina, sua assistente nutricional 😊\n\nComo posso ajudar você hoje? Você pode me perguntar sobre calorias, proteínas, dietas ou enviar fotos de alimentos!',
+          type: 'text',
+          created_at: new Date().toISOString(),
+        }];
         setHistorico(fallback);
         setSelectedDayKey(dayKey(new Date()));
       }
     })();
   }, []);
 
-  // auto-scroll
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [historico, isTyping, selectedDayKey]);
 
-  // botão “ir ao fim”
   const handleScroll = useCallback(() => {
     const el = scrollRef.current; if (!el) return;
     const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
@@ -232,7 +220,6 @@ export default function ChatPage() {
     return () => el.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  // atalho "/"
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const ae = document.activeElement?.tagName?.toLowerCase();
@@ -270,7 +257,6 @@ export default function ChatPage() {
     );
   };
 
-  // enviar texto
   const sendText = async (text: string) => {
     const now = new Date();
     const userMsg: Mensagem = { role: 'user', text, type: 'text', created_at: now.toISOString() };
@@ -282,12 +268,10 @@ export default function ChatPage() {
     try {
       const { data } = await api.post<{ response: string }>('/chat/send', { message: text });
       const botMsg: Mensagem = { role: 'bot', text: data.response, type: 'text', created_at: new Date().toISOString() };
-      setHistorico(h => dedupeStrict([...h, botMsg]));
-      saveMessage(botMsg); setRetryText(null);
+      setHistorico(h => dedupeStrict([...h, botMsg])); saveMessage(botMsg); setRetryText(null);
     } catch {
       const errMsg: Mensagem = { role: 'bot', text: 'Desculpe, houve um erro ao conectar. Tente novamente.', type: 'text', created_at: new Date().toISOString() };
-      setHistorico(h => dedupeStrict([...h, errMsg]));
-      saveMessage(errMsg); setRetryText(text);
+      setHistorico(h => dedupeStrict([...h, errMsg])); saveMessage(errMsg); setRetryText(text);
     } finally { setLoading(false); setIsTyping(false); }
   };
 
@@ -301,7 +285,6 @@ export default function ChatPage() {
     setMensagem(''); await sendText(text);
   };
 
-  // paste (div/form)
   const handlePaste: React.ClipboardEventHandler = (e) => {
     const files = (e.clipboardData && e.clipboardData.files) || null;
     if (files && files.length > 0 && files[0].type.startsWith('image/')) { e.preventDefault(); handleFile(files[0]); }
@@ -309,7 +292,6 @@ export default function ChatPage() {
 
   const handleRetry = async () => { if (retryText) await sendText(retryText); };
 
-  // imagem
   const handleFile = async (file: File) => {
     if (!file || !file.type?.startsWith('image/')) return;
     setImgLoading(true);
@@ -317,30 +299,26 @@ export default function ChatPage() {
     const now = new Date();
     const userMsg: Mensagem = { role: 'user', text: '', type: 'image', imageUrl: preview, created_at: now.toISOString() };
     setHistorico(h => dedupeStrict([...h, userMsg]));
-    setSelectedDayKey(dayKey(now));
-    saveMessage(userMsg); setIsTyping(true);
+    setSelectedDayKey(dayKey(now)); saveMessage(userMsg); setIsTyping(true);
 
     try {
       const form = new FormData(); form.append('file', file);
       const { data } = await api.post('/image/analyze', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       const analysis = typeof data.analise === 'string' ? data.analise : JSON.stringify(data.analise);
       const botMsg: Mensagem = { role: 'bot', text: analysis, type: 'image', imageUrl: preview, created_at: new Date().toISOString() };
-      setHistorico(h => dedupeStrict([...h, botMsg]));
-      saveMessage(botMsg);
+      setHistorico(h => dedupeStrict([...h, botMsg])); saveMessage(botMsg);
       setSnackbar({ open: true, message: 'Imagem analisada com sucesso!', severity: 'success' });
     } catch {
       setSnackbar({ open: true, message: 'Falha ao analisar imagem.', severity: 'error' });
     } finally { setImgLoading(false); setIsTyping(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
-  // drag&drop
   const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
   const onDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); };
   const onDrop = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); };
 
   const copyText = (text: string) => { navigator.clipboard.writeText(text); setSnackbar({ open: true, message: 'Mensagem copiada!', severity: 'success' }); };
 
-  // grupos por dia
   const groups = useMemo(() => {
     const map = new Map<string, Mensagem[]>();
     for (const m of historico) { const k = dayKey(m.created_at); if (!map.has(k)) map.set(k, []); map.get(k)!.push(m); }
@@ -367,9 +345,7 @@ export default function ChatPage() {
 
   const renderHistoryList = () => (
     <List dense disablePadding subheader={<li />} sx={{ maxHeight: '100%', overflowY: 'auto' }}>
-      {groups.length === 0 && (
-        <Box sx={{ p: 2 }}><Typography variant="body2" color="text.secondary">Sem conversas ainda.</Typography></Box>
-      )}
+      {groups.length === 0 && (<Box sx={{ p: 2 }}><Typography variant="body2" color="text.secondary">Sem conversas ainda.</Typography></Box>)}
       {groups.map(([k, msgs]) => (
         <li key={k}>
           <ul style={{ padding: 0, margin: 0 }}>
@@ -389,45 +365,14 @@ export default function ChatPage() {
     </List>
   );
 
-  const centerColSx = {
-    width: '100%',
-    maxWidth: `${MAX_CHAT_WIDTH}px`,
-    mx: 'auto' as const,
-  };
+  const centerColSx = { width: '100%', maxWidth: `${MAX_CHAT_WIDTH}px`, mx: 'auto' as const };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        height: { xs: '100dvh', md: 'calc(100vh - 64px)' },
-        width: '100%',
-        position: 'relative',
-        backgroundColor: '#f5f7f5',
-        marginLeft: { xs: 0, md: `${LEFT_SIDEBAR_WIDTH}px` },
-      }}
-    >
+    <Box sx={{ display: 'flex', height: { xs: '100dvh', md: 'calc(100vh - 64px)' }, width: '100%', position: 'relative', backgroundColor: '#f5f7f5', marginLeft: { xs: 0, md: `${LEFT_SIDEBAR_WIDTH}px` } }}>
       {/* Chat */}
-      <Box
-        sx={{
-          flex: '1 1 auto',
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'rgba(255,255,255,0.86)',
-          backdropFilter: 'blur(8px)',
-          boxShadow: { xs: 'none', md: '0 0 32px rgba(0,0,0,0.06)' },
-        }}
-      >
+      <Box sx={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(255,255,255,0.86)', backdropFilter: 'blur(8px)', boxShadow: { xs: 'none', md: '0 0 32px rgba(0,0,0,0.06)' } }}>
         {/* Cabeçalho */}
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 3,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.75))',
-            borderBottom: '1px solid rgba(0,0,0,0.06)',
-          }}
-        >
+        <Box sx={{ position: 'sticky', top: 0, zIndex: 3, background: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.75))', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           <Box sx={{ ...centerColSx, px: { xs: 1.5, md: 2 }, py: 1.25, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Avatar src={LINA_AVATAR} alt="Lina" sx={{ width: 36, height: 36, boxShadow: '0 2px 8px rgba(102, 187, 106, 0.3)', border: '2px solid #fff', bgcolor: '#7AA374' }} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -438,7 +383,6 @@ export default function ChatPage() {
               </Box>
             </Box>
 
-            {/* Desktop: botão 'Histórico' (sem ícone) */}
             {!isMobile && (
               <Button
                 size="small"
@@ -450,7 +394,6 @@ export default function ChatPage() {
               </Button>
             )}
 
-            {/* Mobile: ícone continua */}
             {isMobile && (
               <Tooltip title="Abrir histórico">
                 <IconButton onClick={openMobileHistory}><HistoryIcon /></IconButton>
@@ -471,9 +414,7 @@ export default function ChatPage() {
             <Box sx={{ ...centerColSx, px: 3, pt: 3, pb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>Sugestões de perguntas:</Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {suggestions.map((s, i) => (
-                  <Chip key={i} label={s} onClick={() => handleSuggestionClick(s)} />
-                ))}
+                {suggestions.map((s, i) => (<Chip key={i} label={s} onClick={() => handleSuggestionClick(s)} />))}
               </Box>
               <Divider sx={{ mt: 2 }} />
             </Box>
@@ -492,10 +433,7 @@ export default function ChatPage() {
         >
           <Box sx={{ ...centerColSx, px: { xs: 1, sm: 2 }, pt: 2 }}>
             {isDragging && (
-              <Box
-                onDragOver={(e) => e.preventDefault()}
-                sx={{ position: 'fixed', inset: 0, zIndex: 5, border: '2px dashed rgba(102,187,106,0.6)', borderRadius: 2, backgroundColor: 'rgba(102,187,106,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
-              >
+              <Box onDragOver={(e) => e.preventDefault()} sx={{ position: 'fixed', inset: 0, zIndex: 5, border: '2px dashed rgba(102,187,106,0.6)', borderRadius: 2, backgroundColor: 'rgba(102,187,106,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                 <Typography sx={{ fontWeight: 600 }}>Solte a imagem aqui para analisar 📷</Typography>
               </Box>
             )}
@@ -528,16 +466,16 @@ export default function ChatPage() {
                         maxWidth: 680,
                       }}
                     >
-                      {msg.type === 'image' && msg.imageUrl && (
-                        <Box sx={{ mb: msg.text ? 1.5 : 0, overflow: 'hidden', borderRadius: 2 }}>
-                          <img src={msg.imageUrl} alt="" style={{ width: '100%', display: 'block', borderRadius: 8 }} />
-                        </Box>
-                      )}
-                      {msg.text?.trim() && (
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: { xs: '0.95rem', sm: '0.98rem' }, lineHeight: 1.6, wordBreak: 'break-word', fontWeight: msg.role === 'user' ? 500 : 400 }}>
-                          {renderMessageText(msg.text)}
-                        </Typography>
-                      )}
+                      {/* 👉 integração: quando for resposta do BOT de IMAGEM, usa os cards */}
+                      {msg.type === 'image' && msg.role === 'bot'
+                        ? <NutritionalAnalysis text={msg.text} />
+                        : msg.text?.trim() && (
+                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: { xs: '0.95rem', sm: '0.98rem' }, lineHeight: 1.6, wordBreak: 'break-word', fontWeight: msg.role === 'user' ? 500 : 400 }}>
+                            {renderMessageText(msg.text)}
+                          </Typography>
+                        )
+                      }
+
                       {msg.role === 'bot' && (
                         <IconButton size="small" onClick={() => copyText(msg.text)} sx={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, opacity: 0.9, backgroundColor: 'rgba(0,0,0,0.04)', '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' } }}>
                           <ContentCopyIcon sx={{ fontSize: 14 }} />
@@ -587,20 +525,10 @@ export default function ChatPage() {
         </Box>
 
         {/* Input */}
-        <Box
-          component="form"
-          ref={formRef}
-          onSubmit={enviarMensagem}
-          onPaste={handlePaste}
-          sx={{ position: { xs: 'sticky', sm: 'relative' }, bottom: 0, left: 0, right: 0, zIndex: { xs: 10, sm: 'auto' }, background: 'linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(250,250,250,0.98))', borderTop: '1px solid rgba(0,0,0,0.06)' }}
-        >
+        <Box component="form" ref={formRef} onSubmit={enviarMensagem} onPaste={handlePaste} sx={{ position: { xs: 'sticky', sm: 'relative' }, bottom: 0, left: 0, right: 0, zIndex: { xs: 10, sm: 'auto' }, background: 'linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(250,250,250,0.98))', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
           <Box ref={inputWrapRef} sx={{ ...centerColSx, px: { xs: 1.5, sm: 3 }, py: { xs: 1.25, sm: 2 } }}>
             {retryText && (
-              <Alert
-                severity="warning"
-                sx={{ mb: 1.25 }}
-                action={<Button color="inherit" size="small" startIcon={<RestartAltIcon />} onClick={handleRetry}>Tentar novamente</Button>}
-              >
+              <Alert severity="warning" sx={{ mb: 1.25 }} action={<Button color="inherit" size="small" startIcon={<RestartAltIcon />} onClick={handleRetry}>Tentar novamente</Button>}>
                 <AlertTitle>Falha no envio</AlertTitle>
                 Clique em "Tentar novamente" para reenviar sua última mensagem.
               </Alert>
@@ -616,23 +544,14 @@ export default function ChatPage() {
               maxRows={4}
               disabled={isTyping}
               inputRef={inputRef}
-              helperText={
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Shift+Enter: nova linha • "/": focar campo</span>
-                  <span>{mensagem.length}/1000</span>
-                </Box>
-              }
+              helperText={<Box sx={{ display: 'flex', justifyContent: 'space-between' }}><span>Shift+Enter: nova linha • "/": focar campo</span><span>{mensagem.length}/1000</span></Box>}
               inputProps={{ maxLength: 1000 }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <Tooltip title="Anexar imagem para análise">
                       <span>
-                        <IconButton
-                          component="label"
-                          disabled={imgLoading || isTyping}
-                          sx={{ width: 40, height: 40, mr: 0.5, bgcolor: '#66bb6a', color: 'white', '&:hover': { opacity: .9 } }}
-                        >
+                        <IconButton component="label" disabled={imgLoading || isTyping} sx={{ width: 40, height: 40, mr: 0.5, bgcolor: '#66bb6a', color: 'white', '&:hover': { opacity: .9 } }}>
                           <PhotoCameraIcon sx={{ fontSize: 20 }} />
                           <input hidden type="file" accept="image/*" ref={fileInputRef} onChange={(e) => e.target.files && handleFile(e.target.files[0])} />
                         </IconButton>
@@ -670,15 +589,7 @@ export default function ChatPage() {
 
       {/* Painel (desktop) */}
       {!isMobile && (
-        <Box
-          sx={{
-            width: historyOpenDesktop ? HISTORY_WIDTH : 0,
-            transition: 'width .25s ease',
-            overflow: 'hidden',
-            borderLeft: historyOpenDesktop ? '1px solid rgba(0,0,0,0.08)' : 'none',
-            backgroundColor: '#fff',
-          }}
-        >
+        <Box sx={{ width: historyOpenDesktop ? HISTORY_WIDTH : 0, transition: 'width .25s ease', overflow: 'hidden', borderLeft: historyOpenDesktop ? '1px solid rgba(0,0,0,0.08)' : 'none', backgroundColor: '#fff' }}>
           <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="subtitle2">Histórico</Typography>
             <IconButton size="small" onClick={() => setHistoryOpenDesktop(false)}><CloseIcon fontSize="small" /></IconButton>
@@ -690,13 +601,7 @@ export default function ChatPage() {
 
       {/* Drawer (mobile) */}
       {isMobile && (
-        <Drawer
-          anchor="right"
-          open={historyOpenMobile}
-          onClose={closeMobileHistory}
-          ModalProps={{ keepMounted: true }}
-          PaperProps={{ sx: { width: '88vw' } }}
-        >
+        <Drawer anchor="right" open={historyOpenMobile} onClose={closeMobileHistory} ModalProps={{ keepMounted: true }} PaperProps={{ sx: { width: '88vw' } }}>
           <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="subtitle2">Histórico</Typography>
             <IconButton size="small" onClick={closeMobileHistory}><CloseIcon fontSize="small" /></IconButton>
