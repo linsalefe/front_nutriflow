@@ -4,6 +4,7 @@ import MainLayout from './layouts/MainLayout';
 import { useThemeMode } from './contexts/ThemeModeContext';
 
 import ChatPage from './pages/ChatPage';
+import WelcomePage from './pages/WelcomePage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -32,8 +33,8 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          {/* raiz privada → chat */}
-          <Route path="/" element={<Navigate to="/chat" replace />} />
+          {/* raiz privada → welcome */}
+          <Route path="/" element={<WelcomePage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/image" element={<ImageAnalysisPage />} />
           <Route path="/settings" element={<SettingsPage />} />

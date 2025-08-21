@@ -56,18 +56,18 @@ export default function Header({
             </IconButton>
           )}
 
-          {/* Logo + Nome */}
+          {/* Logo + nome */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               component="img"
-              src="/logoNF.svg"
+              src="/logoNF.svg"              // coloquei no /public/logoNF.svg
               alt="NutriFlow"
-              sx={{ width: isMobile ? 24 : 28, height: 'auto', display: 'block' }}
+              sx={{ width: isMobile ? 22 : 26, height: 'auto', display: 'block' }}
             />
             <Typography
               variant={isMobile ? 'subtitle1' : 'h6'}
               noWrap
-              sx={{ color: theme.palette.text.primary, fontWeight: 600 }}
+              sx={{ color: theme.palette.text.primary, fontWeight: 700, letterSpacing: .2 }}
             >
               NutriFlow
             </Typography>
