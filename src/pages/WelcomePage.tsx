@@ -61,6 +61,7 @@ export default function WelcomePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const [themeColors, setThemeColors] = useState(getThemeByTime());
+  const [userName, setUserName] = useState<string>('');
 
   // ======= 🎨 ATUALIZAR TEMA POR HORA =======
   useEffect(() => {
@@ -71,6 +72,19 @@ export default function WelcomePage() {
     return () => clearInterval(interval);
   }, []);
 
+  // ======= 👤 BUSCAR NOME DO USUÁRIO =======
+  useEffect(() => {
+    try {
+      const meData = localStorage.getItem('me');
+      if (meData) {
+        const user = JSON.parse(meData);
+        setUserName(user.nome || user.username || '');
+      }
+    } catch (error) {
+      console.log('Erro ao buscar dados do usuário:', error);
+    }
+  }, []);
+
   const handleStartChat = () => {
     navigate('/chat');
   };
@@ -78,32 +92,30 @@ export default function WelcomePage() {
   return (
     <Box sx={{ 
       display: 'flex', 
-      height: { xs: '100dvh', md: 'calc(100vh - 64px)' }, 
+      height: 'calc(100vh - 64px)', 
       width: '100%', 
-      position: 'relative', 
       background: themeColors.background,
-      marginLeft: { xs: 0, md: `${LEFT_SIDEBAR_WIDTH}px` } 
     }}>
+      {/* Conteúdo centralizado */}
       <Box sx={{ 
         flex: '1 1 auto', 
-        minWidth: 0, 
         display: 'flex', 
         flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        px: { xs: 2, sm: 3 },
+        position: 'relative',
+        overflow: 'hidden',
         backgroundColor: 'rgba(255,255,255,0.86)', 
         backdropFilter: 'blur(8px)', 
-        boxShadow: { xs: 'none', md: '0 0 32px rgba(0,0,0,0.06)' } 
       }}>
         {/* Conteúdo principal centralizado */}
         <Box
           sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            px: { xs: 2, sm: 3 },
-            position: 'relative',
-            overflow: 'hidden'
+            textAlign: 'center',
+            maxWidth: { xs: 350, sm: 480 },
+            width: '100%',
+            zIndex: 1
           }}
         >
           {/* Elementos decorativos de fundo */}
@@ -171,13 +183,13 @@ export default function WelcomePage() {
               </Zoom>
             </motion.div>
 
-            {/* Saudação */}
+            {/* Saudação personalizada */}
             <Fade in timeout={800}>
               <Typography
                 variant={isMobile ? 'h4' : 'h3'}
                 sx={{
                   fontWeight: 700,
-                  mb: 1,
+                  mb: 2,
                   background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.secondary})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -185,25 +197,11 @@ export default function WelcomePage() {
                   letterSpacing: '-0.02em'
                 }}
               >
-                {themeColors.greeting}!
+                {themeColors.greeting}{userName ? `, ${userName}` : ''}!
               </Typography>
             </Fade>
 
             <Fade in timeout={1000}>
-              <Typography
-                variant={isMobile ? 'h6' : 'h5'}
-                sx={{
-                  fontWeight: 500,
-                  mb: 2,
-                  color: 'text.primary',
-                  lineHeight: 1.3
-                }}
-              >
-                Eu sou a Lina
-              </Typography>
-            </Fade>
-
-            <Fade in timeout={1200}>
               <Typography
                 variant="body1"
                 sx={{
@@ -221,7 +219,7 @@ export default function WelcomePage() {
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
             >
               <Button
                 variant="contained"
@@ -250,7 +248,7 @@ export default function WelcomePage() {
             </motion.div>
 
             {/* Frase motivacional */}
-            <Fade in timeout={1600}>
+            <Fade in timeout={1400}>
               <Typography
                 variant="body2"
                 sx={{
@@ -270,12 +268,14 @@ export default function WelcomePage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.8 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
           >
             <Box
               sx={{
                 position: 'absolute',
-                bottom: { xs: 32, sm: 48 },
+                bottom: { xs: 20, sm: 32 },
+                left: '50%',
+                transform: 'translateX(-50%)',
                 display: 'flex',
                 gap: 2,
                 opacity: 0.6

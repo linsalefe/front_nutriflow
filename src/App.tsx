@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
@@ -5,10 +6,11 @@ import { useThemeMode } from './contexts/ThemeModeContext';
 
 import ChatPage from './pages/ChatPage';
 import WelcomePage from './pages/WelcomePage';
+import HowToUsePage from './pages/HowToUsePage';
+import CommandCenterPage from './pages/CommandCenterPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import ImageAnalysisPage from './pages/ImageAnalysisPage';
 import Error404Page from './pages/Error404Page';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -35,8 +37,14 @@ export default function App() {
         >
           {/* raiz privada → welcome */}
           <Route path="/" element={<WelcomePage />} />
+
           <Route path="/chat" element={<ChatPage />} />
-          <Route path="/image" element={<ImageAnalysisPage />} />
+
+          {/* removido ImageAnalysisPage; redireciona /image para a Central */}
+          <Route path="/image" element={<Navigate to="/command-center" replace />} />
+
+          <Route path="/command-center" element={<CommandCenterPage />} />
+          <Route path="/how-to-use" element={<HowToUsePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/404" element={<Error404Page />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
