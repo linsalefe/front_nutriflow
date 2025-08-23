@@ -8,6 +8,7 @@ import ChatPage from './pages/ChatPage';
 import WelcomePage from './pages/WelcomePage';
 import HowToUsePage from './pages/HowToUsePage';
 import CommandCenterPage from './pages/CommandCenterPage';
+import EbookPage from './pages/EbookPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/image" element={<Navigate to="/command-center" replace />} />
 
           <Route path="/command-center" element={<CommandCenterPage />} />
+          <Route path="/ebook" element={<EbookPage />} />
           <Route path="/how-to-use" element={<HowToUsePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/404" element={<Error404Page />} />

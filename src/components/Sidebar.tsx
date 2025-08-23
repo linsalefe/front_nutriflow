@@ -24,6 +24,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CircleIcon from '@mui/icons-material/Circle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -248,6 +249,7 @@ export default function Sidebar({
         <ItemLink to="/" label="Início" icon={<HomeIcon />} />
         <ItemLink to="/chat" label="Chat com Lina" icon={<ChatIcon />} />
         <ItemLink to="/command-center" label="Central de Comandos" icon={<DashboardIcon />} />
+        <ItemLink to="/ebook" label="E-book Nutricional" icon={<MenuBookIcon />} />
         {isMobile && pathname.startsWith('/chat') && (
           <ItemLink to="/chat?history=1" label="Conversas" icon={<HistoryIcon />} />
         )}
